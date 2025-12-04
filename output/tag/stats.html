@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<!-- bgawalt is using a clone of the default theme now -->
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Brian Gawalt's Blog - stats</title>
+        <link rel="shortcut icon" href="https://brian.gawalt.com/favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" href="/theme/css/main.css" />
+        <!-- Thanks to Liz Denys for this: -->
+        <!-- https://lizdenys.com/journal/articles/adding-open-graph-to-pelican.html -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="/tag/stats.html" />
+        <meta property="og:title" content="Brian Gawalt's Blog" />
+        <meta property="og:description" content="Brian Gawalt's Blog" />
+        <meta property="og:image" content="/images/bgawalt.gif" />
+        
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Brian Gawalt's Blog</a></h1>
+                <nav><ul>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/0004-lasso.html">Why's Lasso Do That?</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2025-08-14T11:30:00-07:00">
+                Published: Thu 14 August 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/brian-gawalt.html">Brian Gawalt</a>
+        </address>
+<!-- Not using Categories right now (May 2025) -->
+<!-- p>In <a href="/category/stats.html">stats</a>.</p-->
+<p>tags: <a href="/tag/stats.html">stats</a> <a href="/tag/ml.html">ml</a> <a href="/tag/lasso.html">lasso</a> </p>
+</footer><!-- /.post-info --><p>(<strong>Note:</strong> this post makes heavy use of MathJax. If you're reading via RSS,
+you'll want to click through to the web version.)</p>
+<p>TODO:</p>
+<ul>
+<li>Ridge matplotlib</li>
+<li>Lasso matplotlib</li>
+<li>Interpret lasso results</li>
+<li>Multivariateness</li>
+</ul>
+<p><img alt="MS Paint doodle of a purple lambda (the Greek alphabet character) twirling a lasso in the desert" src="/images/0004_lasso_twirl.png" style="width:80%; max-width:500px;"></p>
+<p>My intuition of regularization it's a compromise.  You want a model that fits
+your historical examples, but you also want a model that is "simple."
+So you set some exchange rate -- the strength of regularization -- and trade off
+"fit my historical data" against "be a simple model." You meet somewhere in the
+middle: a model that's simpler than your unregularized fit would produce, but
+not <em>so</em> simple to the point that it's missing obvious/robust patterns in the
+training data.</p>
+<p>In the biz, we call it a penalty on complexity, which is different than calling
+it a <em>ban</em> on complexity.  We call it shrinking, which is different than calling
+it <em>vanishing.</em>  These names reflect the intuition: penalize something to get
+less of it, but not none of it; shrink something to make it smaller, not
+to make it disappear.  With regularization, we'll reach some compromise point,
+and get a model that (a) is less well-fit to the training data than in the
+unregularized state, but also (b) not maximally, uselessly "simple."</p>
+<p>This blog post is about how one of the world's two most famous regularized
+regression schemes, the Lasso
+(<a href="https://www.jstor.org/stable/2346178">Tibshirani 1996</a>), rejects compromise.
+At and beyond a certain penalty rate, it will quite happily <em>only</em> give you a
+maximally-simple model. No compromise, just an empty model; "I found no pattern
+in the data."  And people love this about the Lasso!
+<a href="https://www2.eecs.berkeley.edu/Pubs/TechRpts/2012/EECS-2012-252.html">My dissertation</a>
+was built on this property, where Lasso regularization can zero out model
+weights.</p>
+<p>But it's also weird to me that it's possible, given what I thought we were doing
+by regularizing a model fit.  It's not a compromise anymore, and I'd like to
+unspool what exactly's driving this blunt outcome. Why's Lasso do that?</p>
+<h2>Unregularized linear regression</h2>
+<p>In the univariate regression case, we have one scalar input that describes an
+example (like a house's lot size), which we're using to predict that
+example's label (like the house's sale price).  We have some collection of
+labeled examples, where the <span class="math">\(i\)</span>th example is described by the pair of scalars
+<span class="math">\((x_i, y_i)\)</span>, that we'll use to learn our linear model.</p>
+<p>Unregularized linear regression defines its cost function as:</p>
+<div class="math">$$\mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) = \sum_{i=1}^N \left(y_i - w x_i\right)^2$$</div>
+<p>(The <span class="math">\((U)\)</span> superscript is just me denoting "<strong>u</strong>nregularized.")</p>
+<p>That cost changes as a function of the model weight <span class="math">\(w\)</span>.  Picking a particular
+model weight value implies an interpretation, "when a house's lot size is one
+<span class="math">\(x\)</span>-unit larger (i.e., one additional square foot), its sale price is probably
+<span class="math">\(w\)</span> <span class="math">\(y\)</span>-units larger (i.e., <span class="math">\(w\)</span> additional US dollars)."</p>
+<p>Better-fit models are the ones where <span class="math">\(w\)</span> pushes the product <span class="math">\(w x_i\)</span>
+closer to <span class="math">\(y_i\)</span>, on average.  And so the traditional way to pick a good value
+for <span class="math">\(w\)</span> is to minimize a cost function that captures that criteria:</p>
+<div class="math">$$\begin{align}w^{(U)} &amp;= \arg \min_w \mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right)\\
+ &amp;= \arg \min_w \sum_{i=1}^N \left(y_i - w x_i\right)^2\end{align}$$</div>
+<p>This minimizing weight value is the one for which the slope
+of <span class="math">\(\mathcal{L}^{(U)}\)</span> is zero, familiar from regular old high school calculus:</p>
+<ul>
+<li><span class="math">\(\mathcal{L}^{(U)}\)</span> is <em>convex</em>,</li>
+<li>meaning its slope is never decreasing in <span class="math">\(w\)</span>,</li>
+<li>so the point of zero slope is the exact value of <span class="math">\(w\)</span> where <span class="math">\(\mathcal{L}^{(U)}\)</span>
+  changes from "the function is decreasing" to "the function is increasing,"</li>
+<li>which means we've found the lowest point on <span class="math">\(\mathcal{L}^{(U)}\)</span>.</li>
+</ul>
+<p>Calculating <span class="math">\(\mathcal{L}^{(U)}\)</span>'s slope as a function of <span class="math">\(w\)</span> is easier with some
+terms rearranged:</p>
+<div class="math">$$\begin{align}\mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) &amp;= \sum_{i=1}^N \left(y_i - w x_i\right)^2 \\
+&amp;= \sum_{i=1}^N \left[y_i^2 - 2 x_i y_i w + x_i^2 w^2\right] \\
+&amp;= \left[\sum_{i=1}^N y_i^2\right] - 2\left[\sum_{i=1}^N (x_i y_i)\right] w + \left[\sum_{i=1}^N x_i^2\right] w^2\end{align}$$</div>
+<p>Taking the derivative of <span class="math">\(\mathcal{L}^{(U)}\)</span> with respect to <span class="math">\(w\)</span> gives:</p>
+<div class="math">$$\begin{align}\left.\mathcal{L}^{(U)}\right.'(w; \{y_i, x_i\}) &amp;= \frac{d}{dw}\left\{\sum_{i=1}^N y_i^2\right\} -
+               \frac{d}{dw}\left\{2\left[\sum_{i=1}^N (x_i y_i)\right] w\right\} + 
+               \frac{d}{dw}\left\{\left[\sum_{i=1}^N x_i^2\right] w^2\right\} \\
+         &amp;= 0
+               - 2\left[\sum_{i=1}^N (x_i y_i)\right]
+               + 2\left[\sum_{i=1}^N x_i^2\right] w \\
+         &amp;= 2\left[\sum_{i=1}^N x_i^2\right] w 
+               - 2\left[\sum_{i=1}^N (x_i y_i)\right] \end{align}$$</div>
+<p>Per above: at our minimizing weight value, this derivative is zero.  Call the 
+weight value associated with zero-slope to be <span class="math">\(w^{(U)}\)</span>, and find it:</p>
+<div class="math">$$\left.\mathcal{L}^{(U)}\right.'(w^{(U)}; \{y_i, x_i\}) = 0 \Rightarrow
+2\left[\sum_{i=1}^N x_i^2\right] w  - 2\left[\sum_{i=1}^N (x_i y_i)\right] = 0$$</div>
+<div class="math">$$w^{(U)} = \frac{\sum_{i=1}^N (x_i y_i)}{\sum_{i=1}^N x_i^2}$$</div>
+<p>For unregularized univariate regression, the model weight we select is the
+ratio of "sum of each feature times its associated label" over "sum of each
+feature times itself." Because we'll use them a lot later, let's give these
+two terms their own alias definitions:</p>
+<div class="math">$$D := \sum_{i=1}^N (x_i y_i)$$</div>
+<p>where <span class="math">\(D\)</span> is for "dot," cuz it's the dot product between two <span class="math">\(N\)</span>-dimentional 
+vectors, one vector holding each example's input/feature scalar and one holding
+each example's label scalar. And:</p>
+<div class="math">$$S := \sum_{i=1}^N x_i^2$$</div>
+<p>where <span class="math">\(S\)</span> is for "<strong>s</strong>um of <strong>s</strong>quares."</p>
+<p>Plugging the aliases in to the two equations above, our unregularized cost
+function and its derivative are:</p>
+<div class="math">$$\mathcal{L}^{(U)} = Sw^2 - 2Dw + \left[\sum_{i=1}^N y_i^2\right]$$</div>
+<div class="math">$$\left.\mathcal{L}^{(U)}\right.'(w; \{y_i, x_i\}) = 2Sw - 2D$$</div>
+<p>and that derivative crosses zero at:</p>
+<div class="math">$$w^{(U)} = \frac{D}{S}$$</div>
+<h2>Ridge regression</h2>
+<p>When we minimized <span class="math">\(\mathcal{L}^{(U)}\)</span>, we were picking a <span class="math">\(w\)</span> that
+matched the predictions to the actual labels across the historical training
+data.  Regularization adds a new term to that cost function that says, "a good
+weight parameter will fit the data, but will also have
+[other desired property of a model weight, orthogonal to its fit to the
+data]."  And in my intuition, it should be a graceful compromise: find a way to
+meet in the middle between data-fitting vs. expressing the newly-introduced
+orthogonal property.</p>
+<p>Ridge regression is a type of regularization that matches that intuition.
+We can start with <span class="math">\(\mathcal{L}^{(U)}\)</span> as the data-fit half of the mixed
+objective, and then add a term to the cost function that asks that the weight we
+find be close to zero. (See a postscript below, "Why hedge towards zero?")</p>
+<p>Ridge regression implements "hedge towards zero" regularization by adding
+a quadratic penalty term.  Call the ridge regression cost
+function <span class="math">\(\mathcal{L}^{(R)}\)</span>, where the superscript <span class="math">\((R)\)</span> means <strong>r</strong>idge:</p>
+<div class="math">$$\mathcal{L}^{(R)}\left(w; \{y_i, x_i\}\right) = \mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) + \mu w^2$$</div>
+<p>Two components, mixed into one objective: our original data-fit objective, plus
+the regularization term <span class="math">\(w^2\)</span>, as adjusted by a scale factor <span class="math">\(\mu\)</span>. The data-fit
+term wants <span class="math">\(w\)</span> to be <span class="math">\(\left(D/S\right)\)</span>; the regularizer term wants it to be
+zero.  Except in the rare case where <span class="math">\(D\)</span> is itself zero, these conflict.  The
+scalar hyperparameter <span class="math">\(\mu\)</span>, which we always set to a non-negative value, acts
+as the "exchange rate" between these two desiderata: the bigger <span class="math">\(\mu\)</span>, the more
+we pull our regularized model weight away from <span class="math">\(w^{(U)}\)</span> and towards zero.</p>
+<p>As before, we'll fit the model by finding the weight value that minimizes
+<span class="math">\(\mathcal{L}^{(R)}\)</span>, which is the same as the one for which
+<span class="math">\(\left.\mathcal{L}^{(R)}\right.'\)</span> is zero:</p>
+<div class="math">$$\begin{align}\mathcal{L}^{(R)}\left(w; \{y_i, x_i\}\right) &amp;= \mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) + \mu w^2\\
+\left.\mathcal{L}^{(R)}\right.'\left(w; \{y_i, x_i\}\right) &amp;= \left.\mathcal{L}^{(U)}\right.'\left(w; \{y_i, x_i\}\right) + \frac{d}{dw}\left\{\mu w^2\right\} \\
+&amp;= 2Sw - 2D + 2\mu w\\
+&amp;= 2\left(\mu + S\right)w - 2D\end{align}$$</div>
+<p>At the minimum of the ridge objective, we have:</p>
+<div class="math">$$\left.\mathcal{L}^{(R)}\right.'\left(w^{(R)}; y, x\right) = 0 \Rightarrow 2\left(\mu + S\right)w^{(R)} - 2D = 0$$</div>
+<div class="math">$$w^{(R)} = \frac{D}{\mu + S}$$</div>
+<p>When <span class="math">\(\mu\)</span> is zero, we recover <span class="math">\(w^{(R)} = D/S\)</span>, same as <span class="math">\(w^{(U)}\)</span>.  When <span class="math">\(\mu\)</span>
+is very large, <span class="math">\(w^{(R)}\)</span> gets very close to zero.  <em>Close!</em>  Never <em>exactly</em>
+zero.  It's always tugged, at least a little bit, in the direction of <span class="math">\(w^{(U)}\)</span>.</p>
+<p>This is the pleasant, intuitive, compromise dynamic.  When <span class="math">\(\mu\)</span> is positive,
+we always land somewhere <em>between</em> "optimally fit the data" and "be zero."
+Both terms in the mixed objective get their say.</p>
+<h2>The Lasso</h2>
+<p>There's another way to encode "be close to zero" as a regularizer.  Instead of
+the quadratic <span class="math">\(w^2\)</span> penalty of ridge, we could instead use <span class="math">\(w\)</span>'s absolute value.
+This is called the Lasso, with cost function <span class="math">\(\mathcal{L}^{(L)}\)</span>:</p>
+<div class="math">$$\mathcal{L}^{(L)}\left(w; y, x\right) = \mathcal{L}^{(U)}\left(w; y, x\right) + \lambda|w|$$</div>
+<p>where <span class="math">\(\lambda\)</span> is now our non-negative penalty-rate hyperparameter.</p>
+<p>To find the minimum of this cost function, we can try repeat the strategy that
+worked for <span class="math">\(\mathcal{L}^{(U)}\)</span> and <span class="math">\(\mathcal{L}^{(R))}\)</span>, "take the
+derivative and find a value <span class="math">\(w^{(L)}\)</span> that makes it zero." But watch what
+happens when we do:</p>
+<div class="math">$$\begin{align}\left.\mathcal{L}^{(L)}\right.'\left(w; \{y_i, x_i\}\right) &amp;= \left.\mathcal{L}^{(U)}\right.'\left(w; \{y_i, x_i\}\right) + \frac{d}{dw}\left\{\lambda |w|\right\} \\
+&amp;= 2Sw - 2D + \lambda \frac{d}{dw}\left\{|w|\right\}\end{align}$$</div>
+<p>We've got a function, <span class="math">\(\left.\mathcal{L}^{(L)}\right.'\)</span>, that's taking the
+derivative of the absolute value function.  That derivative yields one of three
+conditions:</p>
+<div class="math">$$\frac{d}{dw}\left\{|w|\right\} = \left\{\begin{array}{ll} +1&amp;;~w &gt; 0 \\ -1&amp;;~w &lt; 0 \\ \mbox{undefined}&amp;;~w = 0 \end{array} \right.$$</div>
+<p>So the derivative of <span class="math">\(\mathcal{L}^{(L)}\)</span> is defined for positive and negative
+weight values, but not when <span class="math">\(w\)</span> is exactly zero. </p>
+<h3>Lasso's minimum is a positive weight</h3>
+<p>Assume that <span class="math">\(\lambda\)</span>, <span class="math">\(S\)</span>, and <span class="math">\(D\)</span> are setting us up to find that
+<span class="math">\(\left.\mathcal{L}^{(L)}\right.'\left(w^{(L)}; \{y_i, x_i\}\right)\)</span> is
+well-defined to have a value of zero for a strictly positive <span class="math">\(w^{(L)}\)</span>.</p>
+<p>This means that the derivative of <span class="math">\(|w|\)</span> must be well-defined to be 1, so:</p>
+<div class="math">$$\begin{align}\left.\mathcal{L}^{(L)}\right.'\left(w^{(L)}; \{y_i, x_i\}\right) = 0 &amp;\Rightarrow 2Sw^{(L)} - 2D + \lambda \cdot 1 = 0 \\
+&amp;\Rightarrow w^{(L)} = \frac{2D - \lambda}{2S} = \frac{D - \lambda/2}{S}\end{align}$$</div>
+<p>This value is less than <span class="math">\(w^{(U)} = D/S\)</span>.  Lasso has shrunk our model parameter
+towards zero.  Compromise!</p>
+<p>Since the denominator <span class="math">\(S\)</span> is always positive (it's a sum of squares), for this to
+hang together with our <span class="math">\(w^{(L)} &gt; 0\)</span> assumption (and our <span class="math">\(\lambda \geq 0\)</span>
+definition), we need a positive numerator:</p>
+<div class="math">$$2D - \lambda &gt; 0 \Rightarrow 0 \leq \lambda &lt; 2D$$</div>
+<p>So when <span class="math">\(D\)</span> is positive, and larger than <span class="math">\(\lambda/2\)</span> (i.e., we don't regularize
+the estimation too hard), we'll get a nice compromise between <span class="math">\(D/S\)</span> and zero.</p>
+<p>If we do regularize too hard -- i.e., if <span class="math">\(\lambda &gt; 2D\)</span> -- we lose coherence.
+A founding assumption was that <span class="math">\(w^{(L)}\)</span> is positive, but our formula of
+<span class="math">\(w^{(L)} = \frac{D - \lambda/2}{S}\)</span> yields a negative value. A contradiction.
+If <span class="math">\(\lambda\)</span> is too big, this formula for the minimal value is incorrect.</p>
+<h3>Lasso's minimum is a negative weight</h3>
+<p>Quite similar to the got-a-positive-weight scenario, the derivative of <span class="math">\(|w|\)</span>
+is also assumed to be well-defined, this time at a value of -1:</p>
+<div class="math">$$\begin{align}\left.\mathcal{L}^{(L)}\right.'\left(w^{(L)}; \{y_i, x_i\}\right) = 0 &amp;\Rightarrow 2Sw^{(L)} - 2D + \lambda \cdot (-1) = 0 \\
+&amp;\Rightarrow w^{(L)} = \frac{2D + \lambda}{2S} = \frac{D + \lambda/2}{S}\end{align}$$</div>
+<p>The value <span class="math">\(w^{(L)}\)</span> is a shift away from <span class="math">\(D/S\)</span> and towards zero, just like the
+previous scenario.  To make this coherent, though, we require that numerator
+term to be negative:</p>
+<div class="math">$$2D + \lambda &lt; 0 \Rightarrow 0 \leq \lambda &lt; -2D$$</div>
+<p>So again: if <span class="math">\(D\)</span> is negative, and we don't regularize too hard, we'll land in
+this cool scenario, with a weight value somewhere between "fit the data" and
+"be zero." Regularize too much, and this scenario is incoherent.</p>
+<h3>Lasso's minimum is exactly zero</h3>
+<p>Finally, the uncool outcome.  What must be true about <span class="math">\(\lambda\)</span>, relative to 
+<span class="math">\(S\)</span> and <span class="math">\(D\)</span>, to make <span class="math">\(w^{(L)}\)</span> exactly zero?  The cost function's derivative is
+undefined for <span class="math">\(w = 0\)</span>, and so our approach in every previous scenario can't
+apply here:</p>
+<div class="math">$$\begin{align}\left.\mathcal{L}^{(L)}\right.'\left(0; \{y_i, x_i\}\right) &amp;= \left.\mathcal{L}^{(U)}\right.'\left(0; \{y_i, x_i\}\right) + \left.\frac{d}{dw}\left\{\lambda |w|\right\}\right|_{w = 0} \\
+&amp;= \left(2S \cdot 0 - 2D\right) + \lambda  \left.\frac{d}{dw}\left\{|w|\right\}\right|_{w = 0} \\
+&amp;= -2D + \mbox{undefined} \\
+&amp;= \mbox{undefined}\end{align}$$</div>
+<p>With the cost function's derivative undefined, we can't work backwards to decide
+what <span class="math">\(\lambda\)</span> would need to be relative to <span class="math">\(D\)</span> and <span class="math">\(S\)</span> to make that defined value zero.</p>
+<h4>The subderivative</h4>
+<p>To address this kind of convex function, where the derivative is undefined, the
+we have instead the concept of a
+<a href="https://en.wikipedia.org/wiki/Subderivative">subderivative</a>.  It's a
+generalization of the derivative: "if a line intersects our convex function
+<span class="math">\(f\)</span> at some point, without any point on that line exceeding the value of <span class="math">\(f\)</span>,
+is the range of slopes that line could take?" The subderivative returns a <em>set</em>
+of slope values at any point on your function that satisfy this "don't cross
+over the function" criteria.</p>
+<p>For any point where <span class="math">\(f\)</span> is differentiable, <span class="math">\(f\)</span>'s subderivative is pleasantly
+boring. The range of allowable slopes is a singleton: it's just the derivative
+of <span class="math">\(f\)</span>. That's what it means for a line to be tangent to a convex function.
+That special and unique tangent line intersects the convex function, but never
+crosses it.</p>
+<p>For points where <span class="math">\(f\)</span> is not differentiable, the subderivative is a range of
+values. In the absolute value case, <span class="math">\(f(x) = |x|\)</span>, that range is <span class="math">\([-1, 1]\)</span>.
+Here's <span class="math">\(f(x) = |x|\)</span> and a buncha lines whose slopes are in the subderivative
+of <span class="math">\(f\)</span> at the point <span class="math">\(x = 0\)</span>:</p>
+<p><img alt="Matplotlib line chart of f(x) = |x| in a solid blue line plus smaller blue dashed lines that pass through (0, 0) but never exceed |x|" src="/images/0004_abs_subdiff.png"></p>
+<p>The absolute value function is convex, and has a unique global minimum. And we
+can see that the unique global minimum is at <span class="math">\(x = 0\)</span>. That's where the function
+flips from decreasing to increasing. The subderivative at <span class="math">\(x = 0\)</span> includes
+positive slopes, negative slopes, and -- hey! -- the zero slope. (At every other
+value of <span class="math">\(x\)</span>, the subderivative is either the singleton <span class="math">\(\{+1\}\)</span> or the
+singleton <span class="math">\(\{-1\}\)</span>.)</p>
+<p>We can now give ourselves an upgrade from the derivative-based minimization
+technique "from regular old high school calculus," to one backed by
+subderivatives. Before, we wanted the point at which the derivative was zero.
+Now, we want a point where the subderivative <em>contains</em> zero.</p>
+<h4>Lasso's subderivative</h4>
+<p>Let's evaluate the subderivative of <span class="math">\(\mathcal{L}^{(L)}\)</span> at <span class="math">\(w = 0\)</span>. To do this,
+we'll need to apply a linearity property of subderivatives.  The subderivative
+of <span class="math">\(f\)</span> plus <span class="math">\(g\)</span>, is
+<a href="https://en.wikipedia.org/wiki/Minkowski_addition">the Minkowski sum</a> of <span class="math">\(f\)</span>'s
+subderivative and <span class="math">\(g\)</span>'s subderivative. The Minkowski sum is a way to combine two
+sets of addable elements into a third set: take every pairwise combo, where the
+first element is from the first set and the second from the second, and include
+their sum as an element in that output set.</p>
+<p>If we make <span class="math">\(\partial\)</span> our operator symbol for "take the subderivative," and
+<span class="math">\(\oplus_M\)</span> to mean "take the Minkowski sum", we can start evaluating the
+subderivative of <span class="math">\(\mathcal{L}^{(L)}\)</span> at <span class="math">\(w = 0\)</span>:</p>
+<div class="math">$$\begin{align}\partial\left\{\mathcal{L}^{(L)}\left(w; \{y_i, x_i\}\right)\right\} &amp;= \partial\left\{ \mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) + \lambda |w| \right\} \\
+&amp;= \partial\left\{ \mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) \right\} \oplus_M \partial\left\{ \lambda |w| \right\}\end{align}$$</div>
+<p>The left term is taking the subderivative of <span class="math">\(\mathcal{L}^{(U)}\)</span>. And that's
+easy: <span class="math">\(\mathcal{L}^{(U)}\)</span> is everywhere-differentiable, so its subderivative is
+everywhere just a singleton whose lone element is
+<span class="math">\(\left.\mathcal{L}^{(U)}\right.'\)</span>.  The right term is the subderivative of a
+scaled-up absolute value function.</p>
+<p>If we evaluate at <span class="math">\(w = 0\)</span>:</p>
+<div class="math">$$\begin{align}\left.\partial\left\{\mathcal{L}^{(L)}\left(w; \{y_i, x_i\}\right)\right\}\right|_{w = 0} &amp;= \left.\partial\left\{ \mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) \right\}\right|_{w = 0} \oplus_M \left.\partial\left\{ \lambda |w| \right\}\right|_{w=0} \\
+&amp;= \left\{ \left.\left.\mathcal{L}^{(U)}\right.'\left(w; \{y_i, x_i\}\right)\right|_{w=0} \right\} \oplus_M \left\{ \omega~|~\omega \in [-\lambda, \lambda]\right\} \\
+&amp;= \left\{ \left.\left(2Sw - 2D\right)\right|_{w=0} \right\} \oplus_M \left\{ \omega~|~\omega \in [-\lambda, \lambda]\right\} \\
+&amp;= \left\{ -2D \right\} \oplus_M \left\{ \omega~|~\omega \in [-\lambda, \lambda]\right\} \\
+&amp;= \left\{ \omega - 2D~|~\omega \in [-\lambda, \lambda]\right\}\end{align}$$</div>
+<p>Which is to say, the subderivative of <span class="math">\(\mathcal{L}^{(L)}\)</span> at <span class="math">\(w=0\)</span> is the
+set of slopes in the range <span class="math">\([-\lambda - 2D, \lambda - 2D]\)</span>.</p>
+<p>For <span class="math">\(w^{(L)}\)</span> to be zero, we need the zero-slope to be in that range:</p>
+<div class="math">$$\begin{align}0 \in~&amp; [-\lambda - 2D, \lambda - 2D] \\
+\Rightarrow~&amp;-\lambda - 2D \leq 0 \leq \lambda - 2D \\
+\Rightarrow~&amp; -\lambda \leq 2D \leq \lambda \\
+\Rightarrow~&amp; \lambda \geq |2D| \end{align}$$</div>
+<p>We now have our conditions under which the Lasso model's weight <span class="math">\(w^{(L)}\)</span> is
+zero:</p>
+<blockquote>
+<p><strong>When <span class="math">\(\lambda \geq 2\sum_{i=1}^N (x_i y_i)\)</span>, the univariate Lasso gives a
+pure zero model weight.</strong></p>
+</blockquote>
+<p>This concurs with our earlier two constraints on when <span class="math">\(w^{(L)}\)</span> could be
+positive or negative.  We only get a non-zero <span class="math">\(w^{(L)}\)</span> when <span class="math">\(\lambda\)</span> is
+small relative to <span class="math">\(|D|\)</span>.</p>
+<h2>Why's Lasso do that?</h2>
+<p>To better understand why a sufficiently large <span class="math">\(\lambda\)</span> turns Lasso from a
+shrinkage operation to a <em>vanishing</em> operation, let's draw some pictures.</p>
+<p>First, we'll simplify things by just assuming that <span class="math">\(D\)</span> is positive. The
+intuition will still hold for the <span class="math">\(D\)</span>-is-negative case, too; we'll just need to
+mentally flip stuff across the vertical axis.</p>
+<h2>Lasso in multiple dimensions</h2>
+<p>It's a convex objective.</p>
+<h2>Postscript: Why hedge towards zero?</h2>
+<p>Both ridge and the Lasso use "the weight is close to zero" as the "orthogonal
+property" that the regularized model combines with the basic fit-the-data
+objective.</p>
+<p>Using that as the competing goal of the regularized regression is a way of
+baking humility into our model fit.  Imagine <span class="math">\(x\)</span> and <span class="math">\(y\)</span> are of a similar scale.
+Maybe because you just picked units that are a natural fit for this (in the Bay
+Area, house floor area in units of "square feet," and price in units of
+"thousands of USD"). Or maybe, you've
+<a href="https://en.wikipedia.org/wiki/Standard_score">z-score-standardized</a>
+your raw data to be zero-mean and unit-variance.  When <span class="math">\(x\)</span> and <span class="math">\(y\)</span> are on
+the same  basic scale, there are two ways for <span class="math">\(w^{(U)}\)</span> to be far from zero:</p>
+<ol>
+<li>You've stumbled upon a relationship between <span class="math">\(x\)</span> and <span class="math">\(y\)</span> where even the
+    tiniest increase in <span class="math">\(x\)</span> means a giant swing in <span class="math">\(y\)</span>.  That happens sometimes!
+    Usually you don't need statistical analysis to notice those kinds of
+    effects, though.</li>
+<li>You've just got some noise in your data that's caused you to overestimate
+    the effect of <span class="math">\(x\)</span> on <span class="math">\(y\)</span>.  This also happens sometimes.</li>
+</ol>
+<p>So "be close to zero" is a way to say "if you're seeing a large effect size
+in terms of <span class="math">\(D\)</span>-over-<span class="math">\(S\)</span>, maybe hedge that towards zero; maybe that hedge is
+washing out a genuine law of nature, but you're probably washing out noise
+instead."  Humility.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>links</h2>
+                        <ul>
+                            <li><a href="https://brian.gawalt.com">Brian's Homepage</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://bsky.app/profile/brian.gawalt.com">Bluesky</a></li>
+                            <li><a href="https://github.com/bgawalt">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is based on work by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

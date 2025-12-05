@@ -61,8 +61,6 @@ Collecting pelican[markdown]
 [...]
 ```
 
-UPDATE: 
-
 Then I created and navigated to this directory (`~/blog`) and ran the
 quickstart:
 
@@ -88,7 +86,7 @@ needed by Pelican.
 Done. Your new project is available at /home/bgawalt/blog
 ```
 
-TODO: Actually write some content and generate the site:
+## Official instructions
 
 ```
 Viewing the generated files

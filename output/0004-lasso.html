@@ -44,8 +44,10 @@
 <!-- Not using Categories right now (May 2025) -->
 <!-- p>In <a href="/category/stats.html">stats</a>.</p-->
 <p>tags: <a href="/tag/stats.html">stats</a> <a href="/tag/ml.html">ml</a> <a href="/tag/lasso.html">lasso</a> </p>
-</footer><!-- /.post-info -->      <p>(<strong>Note:</strong> this post makes heavy use of MathJax. If you're reading via RSS,
-you'll want to click through to the web version.)</p>
+</footer><!-- /.post-info -->      <blockquote>
+<p><strong>Note:</strong> this post makes heavy use of MathJax. If you're reading via RSS,
+you'll want to click through to the web version.</p>
+</blockquote>
 <p>TODO:</p>
 <ul>
 <li>Ridge matplotlib</li>
@@ -53,7 +55,7 @@ you'll want to click through to the web version.)</p>
 <li>Interpret lasso results</li>
 <li>Multivariateness</li>
 </ul>
-<p><img alt="MS Paint doodle of a purple lambda (the Greek alphabet character) twirling a lasso in the desert" src="/images/0004_lasso_twirl.png" style="width:80%; max-width:500px;"></p>
+<p><img alt="MS Paint doodle of a purple lambda (the Greek alphabet character) twirling alasso in the desert" src="/images/0004_lasso_twirl.png" style="width:80%; max-width:500px;"></p>
 <p>My intuition of regularization it's a compromise.  You want a model that fits
 your historical examples, but you also want a model that is "simple."
 So you set some exchange rate -- the strength of regularization -- and trade off
@@ -78,8 +80,86 @@ in the data."  And people love this about the Lasso!
 was built on this property, where Lasso regularization can zero out model
 weights.</p>
 <p>But it's also weird to me that it's possible, given what I thought we were doing
-by regularizing a model fit.  It's not a compromise anymore, and I'd like to
-unspool what exactly's driving this blunt outcome. Why's Lasso do that?</p>
+by regularizing a model fit.  It's not a compromise anymore.
+Why's Lasso do that?</p>
+<h2>What's Lasso?  (A convex optimization.)</h2>
+<p>We'll formalize "fit the data, but also use a simple model" by posing an
+optimization task built on five raw ingredients:</p>
+<ol>
+<li>Defining "the data" as a collection of <span class="math">\(N\)</span> vector-scalar pairs,
+    <span class="math">\(\left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N\)</span>, where each
+    <span class="math">\(\vec{\mathbb{x}}_j\)</span> is in <span class="math">\(\mathbb{R}^p\)</span> (call each of these a <em>feature
+    vector</em>) and each <span class="math">\(y_j\)</span> is a scalar <em>label</em>.</li>
+<li>Defining the model as a vector of <span class="math">\(p\)</span> parameters,
+    <span class="math">\(\vec{\mathbb{w}} \in \mathbb{R}^p\)</span>.  Call each individual parameter, each
+    element of this vector <span class="math">\(w_i,~i = 1, \ldots, p\)</span>, a <em>model weight.</em></li>
+<li>Defining a function, <span class="math">\(f\left(\cdot; \left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N\right): \mathbb{R}^p \to \mathbb{R}\)</span>,
+    that expresses goodness-of-fit.  By construction of <span class="math">\(f\)</span>, a model parameter
+    vector that minimizes <span class="math">\(f\)</span> corresponds to a model that's "fitting the data"
+    to the best possible extent.  Call <span class="math">\(f\)</span> the <em>loss function</em>.</li>
+<li>Defining a function, <span class="math">\(r: \mathbb{R}^p \to \mathbb{R}\)</span>, that expresses
+    model simplicity.  A model parameter vector that minimizes this function
+    corresponds to a maximally simple model.  Call <span class="math">\(r\)</span> the <em>regularizer.</em></li>
+<li>Defining a scalar hyperparameter, <span class="math">\(\lambda \geq 0\)</span>, that defines the strength
+    of regularization.  The bigger <span class="math">\(\lambda\)</span>, the more we favor <span class="math">\(r\)</span> over <span class="math">\(f\)</span>.</li>
+</ol>
+<p>Mixing these together, our optimization task is:</p>
+<div class="math">$$\vec{\mathbb{w}}^* := \arg \min_{\vec{\mathbb{w}} \in \mathbb{R}^p} f\left(\vec{\mathbb{w}}; \left\{\vec{\mathbb{x}}_j, y_j\right\}\right) + \lambda r(\vec{\mathbb{w}})$$</div>
+<h3>Lasso's loss function</h3>
+<p>Our loss function is defined as:</p>
+<div class="math">$$f\left(\vec{\mathbb{w}}; \left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N\right) = \sum_{j=1}^N{\left(\vec{\mathbb{w}}^T\vec{\mathbb{x}}_j - y_j\right)^2}$$</div>
+<p>That's:</p>
+<ol>
+<li>the sum, over all <span class="math">\(N\)</span> features-and-label pairs,</li>
+<li>of the square</li>
+<li>of the difference</li>
+<li>between the actual label <span class="math">\(y_j\)</span></li>
+<li>and the dot product of <span class="math">\(\vec{\mathbb{w}}\)</span> and <span class="math">\(\vec{\mathbb{x}}_j\)</span></li>
+</ol>
+<p>The model weights "fit the data" by dint of defining a weighted sum of the
+feature vector elements that is a reliably close match to the features'
+corresponding scalar label.  The loss function is a sum of squares, so it's
+always non-negative; the closer it is to zero, the better the average label 
+match we are getting from our model weights.  Minimize the loss function to
+best fit the data, just how we wanted.</p>
+<h3>Lasso's regularizer</h3>
+<p>Our regularizer is:</p>
+<div class="math">$$r\left(\vec{\mathbb{w}}\right) = \left|\left|\vec{\mathbb{w}}\right|\right|_1 = \sum_{i=1}^p\left|w_i\right|$$</div>
+<p>the <span class="math">\(L_1\)</span> norm of our model weight vector.  Models with weights that are
+reliably close to zero count as "simpler" than ones with larger-magnitude 
+weights.  Just like <span class="math">\(f\)</span>, <span class="math">\(r\)</span> is always non-negative, and we can minimize it by
+choosing a weight vector of all zeroes.  The model that always picks "zero" as
+its guess for <span class="math">\(y\)</span>, totally ignoring the feature vector, is this regularizer's
+simplest possible model.</p>
+<h3>Lasso's convexity</h3>
+<p>From above, our optimization task is:</p>
+<div class="math">$$\vec{\mathbb{w}}^* := \arg \min_{\vec{\mathbb{w}} \in \mathbb{R}^p} f\left(\vec{\mathbb{w}}; \left\{\vec{\mathbb{x}}_j, y_j\right\}\right) + \lambda r(\vec{\mathbb{w}})$$</div>
+<p>Take on faith that this mixture of <span class="math">\(f\)</span>, <span class="math">\(r\)</span>, and <span class="math">\(\lambda\)</span> is convex.
+<span class="math">\(f\)</span> and <span class="math">\(r\)</span> are both convex, and <span class="math">\(\lambda\)</span> is non-negative, which lets us argue</p>
+<ol>
+<li>the scaling-up of a convex function by a non-negatve value is itself convex,
+    so <span class="math">\(\lambda r(\vec{\mathbb{w}})\)</span> is also convex, </li>
+<li>the sum of two convex functions is itself convex, so the overall mixture
+    <span class="math">\((f + \lambda r)\)</span> we're minimizing is convex.</li>
+</ol>
+<p>Convex functions come with a lot of nice properties I will leverage later on, so
+I want to emphasize the convexity of our optimization task now.</p>
+<h3>Dropping down to univariate Lasso</h3>
+<p>From here, we'll take a special case: when <span class="math">\(p\)</span> is 1.  This univariate regression
+turns our weight and feature "vectors" into plain ol' scalars, making our
+optimization task:</p>
+<div class="math">$$w^* := \arg \min_{w \in \mathbb{R}} \sum_{j=1}^N{\left(w \cdot x_j - y_j\right)^2} + \lambda\left|w\right|$$</div>
+<p>I promise we're reinflate this to the multivariate case before we're done here.
+Lasso's convexity will help a lot with that.</p>
+<p>But now that we're down here, we celebrate that low dimensionality means we can
+make charts.  Charts!</p>
+<p>TODO make chart</p>
+<h2>What's Lasso do?  (Parabolas.)</h2>
+<h3>Zero regularization</h3>
+<h3>Some regularization</h3>
+<h3>Lots of regularization</h3>
+<h2>Why's Lasso do that? (Discontinuous slope.)</h2>
+<h2>Returning to multiple features</h2>
 <h2>Unregularized linear regression</h2>
 <p>In the univariate regression case, we have one scalar input that describes an
 example (like a house's lot size), which we're using to predict that

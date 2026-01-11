@@ -7,8 +7,8 @@ Author: Brian Gawalt
 Summary: How the Lasso forces a zero-weight model: an end-to-end rundown.
 opengraph_image: 0004_lasso_twirl.png
 
-(**Note:** this post makes heavy use of MathJax. If you're reading via RSS,
-you'll want to click through to the web version.)
+> **Note:** this post makes heavy use of MathJax. If you're reading via RSS,
+> you'll want to click through to the web version.
 
 TODO:
 
@@ -17,7 +17,7 @@ TODO:
 * Interpret lasso results
 * Multivariateness
 
-![MS Paint doodle of a purple lambda (the Greek alphabet character) twirling a lasso in the desert](/images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
+![MS Paint doodle of a purple lambda (the Greek alphabet character) twirling alasso in the desert](/images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
 
 My intuition of regularization it's a compromise.  You want a model that fits
 your historical examples, but you also want a model that is "simple."
@@ -46,10 +46,103 @@ was built on this property, where Lasso regularization can zero out model
 weights.
 
 But it's also weird to me that it's possible, given what I thought we were doing
-by regularizing a model fit.  It's not a compromise anymore, and I'd like to
-unspool what exactly's driving this blunt outcome. Why's Lasso do that?
+by regularizing a model fit.  It's not a compromise anymore.
+Why's Lasso do that?
 
-## What's Lasso do? (Parabolas.)
+## What's Lasso?  (A convex optimization.)
+
+We'll formalize "fit the data, but also use a simple model" by posing an
+optimization task built on five raw ingredients:
+
+1.  Defining "the data" as a collection of $N$ vector-scalar pairs,
+    $\left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N$, where each
+    $\vec{\mathbb{x}}_j$ is in $\mathbb{R}^p$ (call each of these a *feature
+    vector*) and each $y_j$ is a scalar *label*.
+2.  Defining the model as a vector of $p$ parameters,
+    $\vec{\mathbb{w}} \in \mathbb{R}^p$.  Call each individual parameter, each
+    element of this vector $w_i,~i = 1, \ldots, p$, a *model weight.*
+3.  Defining a function, $f\left(\cdot; \left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N\right): \mathbb{R}^p \to \mathbb{R}$,
+    that expresses goodness-of-fit.  By construction of $f$, a model parameter
+    vector that minimizes $f$ corresponds to a model that's "fitting the data"
+    to the best possible extent.  Call $f$ the *loss function*.
+4.  Defining a function, $r: \mathbb{R}^p \to \mathbb{R}$, that expresses
+    model simplicity.  A model parameter vector that minimizes this function
+    corresponds to a maximally simple model.  Call $r$ the *regularizer.*
+5.  Defining a scalar hyperparameter, $\lambda \geq 0$, that defines the strength
+    of regularization.  The bigger $\lambda$, the more we favor $r$ over $f$.
+
+Mixing these together, our optimization task is:
+
+$$\vec{\mathbb{w}}^* := \arg \min_{\vec{\mathbb{w}} \in \mathbb{R}^p} f\left(\vec{\mathbb{w}}; \left\{\vec{\mathbb{x}}_j, y_j\right\}\right) + \lambda r(\vec{\mathbb{w}})$$
+
+### Lasso's loss function
+
+Our loss function is defined as:
+
+$$f\left(\vec{\mathbb{w}}; \left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N\right) = \sum_{j=1}^N{\left(\vec{\mathbb{w}}^T\vec{\mathbb{x}}_j - y_j\right)^2}$$ 
+
+That's:
+
+1. the sum, over all $N$ features-and-label pairs,
+2. of the square
+3. of the difference
+4. between the actual label $y_j$
+5. and the dot product of $\vec{\mathbb{w}}$ and $\vec{\mathbb{x}}_j$
+
+The model weights "fit the data" by dint of defining a weighted sum of the
+feature vector elements that is a reliably close match to the features'
+corresponding scalar label.  The loss function is a sum of squares, so it's
+always non-negative; the closer it is to zero, the better the average label 
+match we are getting from our model weights.  Minimize the loss function to
+best fit the data, just how we wanted.
+
+### Lasso's regularizer
+
+Our regularizer is:
+
+$$r\left(\vec{\mathbb{w}}\right) = \left|\left|\vec{\mathbb{w}}\right|\right|_1 = \sum_{i=1}^p\left|w_i\right|$$
+
+the $L_1$ norm of our model weight vector.  Models with weights that are
+reliably close to zero count as "simpler" than ones with larger-magnitude 
+weights.  Just like $f$, $r$ is always non-negative, and we can minimize it by
+choosing a weight vector of all zeroes.  The model that always picks "zero" as
+its guess for $y$, totally ignoring the feature vector, is this regularizer's
+simplest possible model.
+
+### Lasso's convexity
+
+From above, our optimization task is:
+
+$$\vec{\mathbb{w}}^* := \arg \min_{\vec{\mathbb{w}} \in \mathbb{R}^p} f\left(\vec{\mathbb{w}}; \left\{\vec{\mathbb{x}}_j, y_j\right\}\right) + \lambda r(\vec{\mathbb{w}})$$
+
+Take on faith that this mixture of $f$, $r$, and $\lambda$ is convex.
+$f$ and $r$ are both convex, and $\lambda$ is non-negative, which lets us argue
+
+1.  the scaling-up of a convex function by a non-negatve value is itself convex,
+    so $\lambda r(\vec{\mathbb{w}})$ is also convex, 
+2.  the sum of two convex functions is itself convex, so the overall mixture
+    $(f + \lambda r)$ we're minimizing is convex.
+
+Convex functions come with a lot of nice properties I will leverage later on, so
+I want to emphasize the convexity of our optimization task now.
+
+### Dropping down to univariate Lasso
+
+From here, we'll take a special case: when $p$ is 1.  This univariate regression
+turns our weight and feature "vectors" into plain ol' scalars, making our
+optimization task:
+
+$$w^* := \arg \min_{w \in \mathbb{R}} \sum_{j=1}^N{\left(w \cdot x_j - y_j\right)^2} + \lambda\left|w\right|$$ 
+
+I promise we're reinflate this to the multivariate case before we're done here.
+Lasso's convexity will help a lot with that.
+
+But now that we're down here, we celebrate that low dimensionality means we can
+make charts.  Charts!
+
+TODO make chart
+
+## What's Lasso do?  (Parabolas.)
 
 ### Zero regularization
 
@@ -58,6 +151,8 @@ unspool what exactly's driving this blunt outcome. Why's Lasso do that?
 ### Lots of regularization
 
 ## Why's Lasso do that? (Discontinuous slope.)
+
+## Returning to multiple features
 
 ## Unregularized linear regression
 

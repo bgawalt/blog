@@ -19,8 +19,8 @@ TODO:
 
 ![MS Paint doodle of a purple lambda (the Greek alphabet character) twirling alasso in the desert](/images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
 
-My intuition of regularization it's a compromise.  You want a model that fits
-your historical examples, but you also want a model that is "simple."
+My intuition of regularization is: it's a compromise.  You want a model that
+fits your historical examples, but you also want a model that is "simple."
 So you set some exchange rate -- the strength of regularization -- and trade off
 "fit my historical data" against "be a simple model." You meet somewhere in the
 middle: a model that's simpler than your unregularized fit would produce, but
@@ -150,24 +150,26 @@ a slope of 1 to a totally null (maximally simple!) slope of zero:
 3.  Their y values largely track the x values, up to an additive factor of
 +/- 0.5 or so.  Three dashed lines pass through the origin, colored blue,
 purple, and red.  They correspond to model predictions from an unregularized
-(slope of 0.95), moderately regularized (slope 0.606), and heavily regularized
+(slope of 0.99), moderately regularized (slope 0.588), and heavily regularized
 (slope 0) Lasso fit.](/images/0004_scatterplot.png)
 
 If we repeatedly produce a model weight $w*(\lambda)$ for many values of
-$\lambda$, we can see this decay evolve in more detail:
+$\lambda$, we can see this decay evolve in more detail (with our three models
+above appearing as special large dots):
 
 ![The regularization path that results from sweeping lambda from 0 to 800 or so.
 The y-axis is labelled w*(lambda), ranging from 0 to 1.  The graph's title is
 "Regularization Path".  A single red series starts as a straight red line from 
-the point (0, 0.95) to (550, 0), connecting to another straight red line from
-(550, 0) to (800, 0).](/images/0004_regularization_path.png)
+the point (0, 0.99) to (500, 0), connecting to another straight red line from
+(500, 0) to (800, 0).  Three dots appear, a blue one at (0, 0.99), purple at
+(200, 0.588), and red at (600, 0).](/images/0004_regularization_path.png)
 
 As regularization strength increases, the resulting model weight drops linearly,
 until it hits absolute zero.  Early on, you see compromise between $f$ and $r$:
 $f$ wants a slope of 1, and $r$ wants a slope of 0, and as we strengthen $r$'s
 negotiating leverage, we get models that look more and more like what $r$ wants.
 
-But past $\lambda = 550$ or so, the optimization is ignoring the $f$ completely.
+But past $\lambda = 500$ or so, the optimization is ignoring the $f$ completely.
 That fit-the-data component is still there as part of the objective to be
 minimized, and yet there's no compromise: the model weight returns what $r$
 wants, and only what $r$ wants.  It's *like* $f$ isn't even there, except it

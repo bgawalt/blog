@@ -180,7 +180,50 @@ What's Lasso doing?  Why's Lasso do that?
 
 ## What's Lasso doing?  (Parabolas.)
 
+Lasso is making our optimizer follow the instructions of one of two parabolas.
+When we strengthen regularization past a certain point, we're not able to make
+either parabola happy, and bounce back and forth between them until we're stuck
+at $w^* = 0$.
+
 ### Zero regularization
+
+When there's no regularization at all, when $\lambda = 0$, our optimizer's
+objective is just to minimize the loss function $f$, the sum of squared errors:
+
+$$\begin{align}w^*(0) &= \arg \min_{w \in \mathbb{R}^p} f\left(w; \left\{x_j, y_j\right\}\right)\\
+  &= \arg \min_{w \in \mathbb{R}} \sum_{j=1}^N{\left(wx_j - y_j\right)^2}\end{align}$$
+
+If we rearrange $f$'s terms a bit, we'll see it's a parabola as a function of
+$w$:
+
+$$\begin{align}f\left(w; \left\{x_j, y_j\right\}\right) &= \sum_{j=1}^N{\left(wx_j - y_j\right)^2}\\
+  &= \sum_{j=1}^N \left[x_j^2 w^2 - 2 x_j y_j w + y_j^2\right] \\
+  &= \left[\sum_{j=1}^N x_j^2\right] w^2 - 2\left[\sum_{j=1}^N (x_j y_j)\right] w + \left[\sum_{j=1}^N y_j^2\right]\end{align}$$
+
+Define some helpful aliases for those terms,
+
+$$S_x := \sum_{j=1}^N x_j^2~~~~D_{xy} := \sum_{j=1}^N (x_j y_j)~~~~S_y := \sum_{j=1}^N y_j^2$$
+
+where $S$'s stand for sums of squares our features or labels and $D$ stands for
+a dot product of feature and label.  That makes the parabolaness of the
+unregularized loss function really stand out:
+
+$$f\left(w; \left\{x_j, y_j\right\}\right) = S_xw^2 - 2D_{xy}w + S_y$$
+
+The vertex of a parabola like this lies at the famous "$-b/2a$" point, which
+means $f$ is minimized at:
+
+$$w^*(0) = -(-2D_{xy})/(2S_x) = D/S_x$$
+
+(Or, expanding those terms for the fun of it:)
+
+$$w^*(0) = \frac{\sum_{j=1}^N (x_j y_j)}{\sum_{j=1}^N x_j^2}$$
+
+Let's plot it for the same blue-dots dataset we used above:
+
+![A blue convex parabola, crossing the y axis at around 340, hitting its minimum
+at the point (1.03, 13.9), with its axis of symmetry added as a vertical blue
+dashed line](/images/0004_parabola_zero_reg.png)
 
 ### Some regularization
 
@@ -231,8 +274,7 @@ Calculating $\mathcal{L}^{(U)}$'s slope as a function of $w$ is easier with some
 terms rearranged:
 
 $$\begin{align}\mathcal{L}^{(U)}\left(w; \{y_i, x_i\}\right) &= \sum_{i=1}^N \left(y_i - w x_i\right)^2 \\
-&= \sum_{i=1}^N \left[y_i^2 - 2 x_i y_i w + x_i^2 w^2\right] \\
-&= \left[\sum_{i=1}^N y_i^2\right] - 2\left[\sum_{i=1}^N (x_i y_i)\right] w + \left[\sum_{i=1}^N x_i^2\right] w^2\end{align}$$
+
 
 Taking the derivative of $\mathcal{L}^{(U)}$ with respect to $w$ gives:
 

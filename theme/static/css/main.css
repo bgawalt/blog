@@ -109,7 +109,10 @@ pre{background-color:  rgb(238, 238, 238); padding: 10px; margin: 10px; overflow
 /* Quotes */
 blockquote {
     margin: 20px;
+    padding: 5px;
+    padding-left: 10px;
     font-style: italic;
+    background-color: rgb(223, 223, 223);
 }
 cite {}
 

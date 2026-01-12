@@ -1,25 +1,14 @@
 # Brian Gawalt's Blog (Pelican Edition)
 
-## Dependencies
+These are the raw ingredients that power https://brian.gawalt.com/blog/.
 
-```shell
-$ python3 -m pip install "pelican[markdown]"
-$ python3 -m pip install pelican-render-math
-```
+Notes to self on how I set all this up.
 
-## Workflow
+## Dev Workflow
 
 Update `content` with a new Markdown post.
 
-Test locally with
-
-```shell
-$ source ~/venv/pelican/bin/activate
-$ cd ~/blog/
-$ pelican --autoreload --listen
-```
-
-For ease of my own copy-pasting:
+Test changes locally with
 
 ```shell
 source ~/venv/pelican/bin/activate; \
@@ -29,6 +18,16 @@ pelican --autoreload --listen
 
 and then browse http://localhost:8000 to check it out.
 
+Stand up the Jupyter backend with:
+
+```shell
+source ~/venv/jupyter/bin/activate; \
+cd ~/blog/content/jupyter/; \
+jupyter notebook --port 9999
+```
+
+## Push to prod
+
 Finally, create the final edition with:
 
 ```shell
@@ -36,7 +35,24 @@ $ pelican content -s publishconf.py
 $ rsync -avc --delete output/ ../brian_gawalt_com/blog/
 ```
 
-Then do the Git shuffle to deploy to the actual web server.
+Then do the usual gawalt.com Git shuffle to deploy to the actual web server.
+
+## Dependencies
+
+Pelican env:
+
+```shell
+$ python3 -m pip install "pelican[markdown]"
+$ python3 -m pip install pelican-render-math
+```
+
+Jupyter env:
+
+```shell
+$ pip3 install jupyter
+$ pip3 install matplotlib
+$ pip3 install scikit-learn
+```
 
 ## Initial install
 

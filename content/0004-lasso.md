@@ -227,11 +227,45 @@ dashed line](/images/0004_parabola_zero_reg.png)
 
 ### Some regularization
 
-TODO:
+When we increase $\lambda$ to some positive value, are adding $\lambda r(w)$ to
+our loss function parabola.  That scaled regularizer is a function that looks
+like:
 
-*  piecewise definition of $\lambda r(w)$
-*  piecewise definition of $f(w) + \lambda r(w)$
-*  vertices of each piece, described as instructions to the optimizer
+$$\begin{align}\lambda r(w) &= \lambda\left|w\right| \\
+  &= \left\{
+        \begin{array}{rl} -\lambda w;&w < 0~~\mbox{(LHS)} \\
+          \lambda w;&w \geq 0~~\mbox{(RHS)}
+        \end{array}
+    \right.\end{align}$$
+
+It's piecewise linear function, with a negative slope on the left-hand side
+(LHS) and positive slope on the right-hand side (RHS).  When we add $f$ to this,
+we wind up with a piecewise quadratic function:
+
+$$\begin{align}f(w) + \lambda r(w) &= f(w) + \lambda\left|w\right| \\
+    &= \left\{
+        \begin{array}{rl} f(w) -\lambda w;&w < 0~~\mbox{(LHS)} \\
+          f(w) + \lambda w;&w \geq 0~~\mbox{(RHS)}
+        \end{array}
+    \right. \\
+    &= \left\{
+        \begin{array}{rl} S_xw^2 - 2D_{xy}w + S_y -\lambda w;&w < 0~~\mbox{(LHS)} \\
+          S_xw^2 - 2D_{xy}w + S_y + \lambda w;&w \geq 0~~\mbox{(RHS)}
+        \end{array}
+    \right. \\
+    &= \left\{
+        \begin{array}{rl} S_xw^2 - (2D_{xy} + \lambda)w + S_y;&w < 0~~\mbox{(LHS)} \\
+          S_xw^2 - (2D_{xy} - \lambda) w + S_y;&w \geq 0~~\mbox{(RHS)}
+        \end{array}
+    \right.
+\end{align}$$
+
+These two parabolas, LHS and RHS, have "$-b/2a$" vertices aligned at:
+
+$$\mbox{LHS vertex:}~~w_{LHS}(\lambda) = \frac{2D_{xy} + \lambda}{S_x}$$
+$$\mbox{RHS vertex:}~~w_{RHS}(\lambda) = \frac{2D_{xy} - \lambda}{S_x}$$
+
+TODO: describe an anthropomorphized optimizer
 
 For our blue-dots dataset, where $D_{xy}$ was positive, we see the
 some-regularization case as this purple curve:
@@ -244,6 +278,13 @@ awful lot like a parabola.  Its vertex at (QQQ, QQQ) is marked with a large
 dot.](/images/0004_parabola_some_reg.png)
 
 ### Lots of regularization
+
+![Our blue parabola from "zero regularization" joined by a steeper red scaled 
+absolute value function that passes through (0.5, 350).  Both these are mostly
+transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
+bottom of the figure.  Their sum, a thicker, opaque red series, no longer looks
+like a parabola, it now looks like a Greek nu character with it point at
+(0, 320).](/images/0004_parabola_lots_reg.png)
 
 ## Why's Lasso do that? (Discontinuous slope.)
 

@@ -227,6 +227,22 @@ dashed line](/images/0004_parabola_zero_reg.png)
 
 ### Some regularization
 
+TODO:
+
+*  piecewise definition of $\lambda r(w)$
+*  piecewise definition of $f(w) + \lambda r(w)$
+*  vertices of each piece, described as instructions to the optimizer
+
+For our blue-dots dataset, where $D_{xy}$ was positive, we see the
+some-regularization case as this purple curve:
+
+![Our blue parabola from "zero regularization" now joined by a red scaled 
+absolute value function that passes through (1, 200).  Both these are mostly
+transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
+bottom of the figure.  Their sum, a thicker, opaque purple series, looks an
+awful lot like a parabola.  Its vertex at (QQQ, QQQ) is marked with a large
+dot.](/images/0004_parabola_some_reg.png)
+
 ### Lots of regularization
 
 ## Why's Lasso do that? (Discontinuous slope.)

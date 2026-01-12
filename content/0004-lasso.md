@@ -147,7 +147,7 @@ purple, and red.  They correspond to model predictions from an unregularized
 (slope of 0.99), moderately regularized (slope 0.588), and heavily regularized
 (slope 0) Lasso fit.](/images/0004_scatterplot.png)
 
-If we repeatedly produce a model weight $w*(\lambda)$ for many values of
+If we repeatedly produce a model weight $w^*(\lambda)$ for many values of
 $\lambda$, we can see this decay evolve in more detail (with our three models
 above appearing as special large dots):
 
@@ -263,46 +263,56 @@ $$\begin{align}f(w) + \lambda r(w) &= f(w) + \lambda\left|w\right| \\
 
 These two parabolas, LHS and RHS, have "$-b/2a$" vertices aligned at:
 
-$$\mbox{LHS vertex:}~~w_{LHS}(\lambda) = \frac{2D_{xy} + \lambda}{S_x}$$
-$$\mbox{RHS vertex:}~~w_{RHS}(\lambda) = \frac{2D_{xy} - \lambda}{S_x}$$
+$$\mbox{LHS vertex:}~~w_{LHS}(\lambda) = \frac{2D_{xy} + \lambda}{2S_x}$$
+$$\mbox{RHS vertex:}~~w_{RHS}(\lambda) = \frac{2D_{xy} - \lambda}{2S_x}$$
 
 *This* function provides our little-guy optimizer a more complicated set of
 instructions:
 
 > *  **While you are on the LHS:** take descent steps towards
->    $(2D_{xy} + \lambda)/S_x$.  If your latest step took you out of the LHS,
+>    $(2D_{xy} + \lambda)/(2S_x)$.  If your latest step took you out of the LHS,
 >    this rule no longer applies.
 > *  **While you are on the RHS:** take descent steps towards
->    $(2D_{xy} - \lambda)/S_x$.  If your latest step took you out of the RHS,
+>    $(2D_{xy} - \lambda)/(2S_x)$.  If your latest step took you out of the RHS,
 >    this rule no longer applies.
 
 When regularization is non-zero, but *light,* the optimizer can resolve this
-without too much extra effort.  Here's what the mixed objective looks like
-for our blue-dots dataset (the purple curve), where $f$'s vertex is on the RHS:
+without too much extra effort.  We saw a case like that above, when we set
+$\lambda := 350$ for our blue-dots dataset. Here's what the mixed objective
+looks like:
 
 ![Our blue parabola from "zero regularization" now joined by a red scaled 
-absolute value function that passes through (1, 200).  Both these are mostly
+absolute value function that passes through (1, 350).  Both these are mostly
 transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
 bottom of the figure.  Their sum, a thicker, opaque purple series, looks an
-awful lot like a parabola.  Its vertex at (QQQ, QQQ) is marked with a large
-dot.](/images/0004_parabola_some_reg.png)
+awful lot like a parabola.](/images/0004_parabola_some_reg.png)
 
 Imagine the little guy starts at $w = -1$.  His thought process is:
 
 1.  "I am starting on the LHS.  The LHS instructions say I should head to
-    $w = (2D_{xy} + \lambda)/S_x$."
+    $w = (2D_{xy} + \lambda)/(2S_x)$."
 2.  **\[later:\]** "I've taken a lot of steps, and not reached
-    $(2D_{xy} + \lambda)/S_x$, and I have in fact crossed the $w = 0$ border.
+    $(2D_{xy} + \lambda)/(2S_x)$, and I have in fact crossed the $w = 0$ border.
     I'm on the RHS now.  My instructions from Step 1 no longer apply."
 3.  "My new instructions, now that I'm on the RHS, say to head to
-    $w = (2D_{xy} - \lambda)/S_x$ instead."
+    $w = (2D_{xy} - \lambda)/(2S_x)$ instead."
 4.  **\[later:\]** "OK, made it.  I am at the vertex of the RHS parabola, which
     is on the RHS (i.e., I never re-crossed the $w = 0$ border)."
 5.  "My instructions are still the same as they were in Step 3, and I've
     finished following them.
     [Job's done.](https://www.youtube.com/watch?v=5r06heQ5HsI)"
 
-TODO: redraw parabolas but with shrinkage annotated
+The jump from $w^*(0)$ to $w^*(350)$ is *shrinkage*: the vertex of the RHS
+parabola is $-\lambda/(2S_x)$ units smaller than the zero-regularization vertex:
+
+![Same as previous image, but with the vertices of the blue and purple
+parabolas drawn with large blue/purple dots.  Two vertical dashed guidelines
+mark the axes of symmetry for the parabolas, and a left-pointing arrow going
+from the blue axis to the purple axis is labeled "-λ/(2Sx)"](/images/0004_parabola_some_reg_vertices.png)
+
+Neither $f$ nor $r$ are minimized at that purple vertex axis of symmetry.  Both
+could be much smaller, if they didn't have to accommodate the other.  That's
+a good compromise: one that leaves everyone upset.
 
 ### Lots of regularization
 

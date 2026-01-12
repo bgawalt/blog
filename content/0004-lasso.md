@@ -140,9 +140,43 @@ Lasso's convexity will help a lot with that.
 But now that we're down here, we celebrate that low dimensionality means we can
 make charts.  Charts!
 
-TODO make chart
+Here's a dataset with a clear relationship between $x$ and $y$.  The data are
+plotted as blue dots.  I fit three Lasso models to this dataset, with $\lambda$
+taking on values of 0, 200, or 600.  I overlay the dashed trendlines each model
+produces for the range of $x$'s, and we see those three trendlines decay from
+a slope of 1 to a totally null (maximally simple!) slope of zero:
 
-## What's Lasso do?  (Parabolas.)
+![A scatterplot of blue dots whose x values are uniformly distributed from -3 to
+3.  Their y values largely track the x values, up to an additive factor of
++/- 0.5 or so.  Three dashed lines pass through the origin, colored blue,
+purple, and red.  They correspond to model predictions from an unregularized
+(slope of 0.95), moderately regularized (slope 0.606), and heavily regularized
+(slope 0) Lasso fit.](/images/0004_scatterplot.png)
+
+If we repeatedly produce a model weight $w*(\lambda)$ for many values of
+$\lambda$, we can see this decay evolve in more detail:
+
+![The regularization path that results from sweeping lambda from 0 to 800 or so.
+The y-axis is labelled w*(lambda), ranging from 0 to 1.  The graph's title is
+"Regularization Path".  A single red series starts as a straight red line from 
+the point (0, 0.95) to (550, 0), connecting to another straight red line from
+(550, 0) to (800, 0).](/images/0004_regularization_path.png)
+
+As regularization strength increases, the resulting model weight drops linearly,
+until it hits absolute zero.  Early on, you see compromise between $f$ and $r$:
+$f$ wants a slope of 1, and $r$ wants a slope of 0, and as we strengthen $r$'s
+negotiating leverage, we get models that look more and more like what $r$ wants.
+
+But past $\lambda = 550$ or so, the optimization is ignoring the $f$ completely.
+That fit-the-data component is still there as part of the objective to be
+minimized, and yet there's no compromise: the model weight returns what $r$
+wants, and only what $r$ wants.  It's *like* $f$ isn't even there, except it
+*is.*
+
+What's Lasso doing?  Why's Lasso do that?
+
+
+## What's Lasso doing?  (Parabolas.)
 
 ### Zero regularization
 
@@ -153,6 +187,8 @@ TODO make chart
 ## Why's Lasso do that? (Discontinuous slope.)
 
 ## Returning to multiple features
+
+## DELETE FROM HERE
 
 ## Unregularized linear regression
 

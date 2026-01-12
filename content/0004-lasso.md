@@ -1,5 +1,5 @@
 Title: Why's Lasso Do That?
-Date: 2025-08-14 11:30
+Date: 2026-01-13 11:30
 Slug: 0004-lasso
 Category: stats
 Tags: stats, ml, lasso
@@ -7,17 +7,11 @@ Author: Brian Gawalt
 Summary: How the Lasso forces a zero-weight model: an end-to-end rundown.
 opengraph_image: 0004_lasso_twirl.png
 
-> **Note:** this post makes heavy use of MathJax. If you're reading via RSS,
-> you'll want to click through to the web version.
-
-TODO:
-
-* Ridge matplotlib
-* Lasso matplotlib
-* Interpret lasso results
-* Multivariateness
 
 ![MS Paint doodle of a purple lambda (the Greek alphabet character) twirling alasso in the desert](/images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
+
+> **Note:** this post makes heavy use of MathJax. If you're reading via RSS,
+> you'll want to click through to the web version.
 
 My intuition of regularization is: it's a compromise.  You want a model that
 fits your historical examples, but you also want a model that is "simple."
@@ -225,6 +219,13 @@ Let's plot it for the same blue-dots dataset we used above:
 at the point (1.03, 13.9), with its axis of symmetry added as a vertical blue
 dashed line](/images/0004_parabola_zero_reg.png)
 
+Imagine our optimizer as a little guy, wandering back and forth along the range
+of $w$ to minimize $f$.  This parabola gives our optimizer unambiguous
+instructions:
+
+> Wherever you are right now, move towards $(D_{xy}/S_x)$.  As long as each step
+> puts you lower than you were before, you will find the minimum.
+
 ### Some regularization
 
 When we increase $\lambda$ to some positive value, are adding $\lambda r(w)$ to
@@ -265,10 +266,19 @@ These two parabolas, LHS and RHS, have "$-b/2a$" vertices aligned at:
 $$\mbox{LHS vertex:}~~w_{LHS}(\lambda) = \frac{2D_{xy} + \lambda}{S_x}$$
 $$\mbox{RHS vertex:}~~w_{RHS}(\lambda) = \frac{2D_{xy} - \lambda}{S_x}$$
 
-TODO: describe an anthropomorphized optimizer
+*This* function provides our little-guy optimizer a more complicated set of
+instructions:
 
-For our blue-dots dataset, where $D_{xy}$ was positive, we see the
-some-regularization case as this purple curve:
+> *  **While you are on the LHS:** take descent steps towards
+>    $(2D_{xy} + \lambda)/S_x$.  If your latest step took you out of the LHS,
+>    this rule no longer applies.
+> *  **While you are on the RHS:** take descent steps towards
+>    $(2D_{xy} - \lambda)/S_x$.  If your latest step took you out of the RHS,
+>    this rule no longer applies.
+
+When regularization is non-zero, but *light,* the optimizer can resolve this
+without too much extra effort.  Here's what the mixed objective looks like
+for our blue-dots dataset (the purple curve), where $f$'s vertex is on the RHS:
 
 ![Our blue parabola from "zero regularization" now joined by a red scaled 
 absolute value function that passes through (1, 200).  Both these are mostly
@@ -276,6 +286,21 @@ transparent, they are called "f(w)" and "lambda r(w)" in the legend at the
 bottom of the figure.  Their sum, a thicker, opaque purple series, looks an
 awful lot like a parabola.  Its vertex at (QQQ, QQQ) is marked with a large
 dot.](/images/0004_parabola_some_reg.png)
+
+Imagine the little guy starts at $w = -1$.  His thought process is:
+
+1.  "I am starting on the LHS.  The LHS instructions say I should head to
+    $w = (2D_{xy} + \lambda)/S_x$."
+2.  **\[later:\]** "I've taken a lot of steps, and not reached
+    $(2D_{xy} + \lambda)/S_x$, and I have in fact crossed the $w = 0$ border.
+    I'm on the RHS now.  My instructions from Step 1 no longer apply."
+3.  "My new instructions, now that I'm on the RHS, say to head to
+    $w = (2D_{xy} - \lambda)/S_x$ instead."
+4.  **\[later:\]** "OK, made it.  I am at the vertex of the RHS parabola, which
+    is on the RHS (i.e., I never re-crossed the $w = 0$ border)."
+5.  "My instructions are still the same as they were in Step 3, and I've
+    finished following them.
+    [Job's done.](https://www.youtube.com/watch?v=5r06heQ5HsI)"
 
 ### Lots of regularization
 

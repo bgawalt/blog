@@ -370,4 +370,6 @@ expect, around 625.
 
 ## Why's Lasso do that? (Discontinuous slope.)
 
+![TODO alt text](/images/0004_g_slopes.png)
+
 ## Returning to multiple features

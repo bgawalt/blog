@@ -18,7 +18,7 @@ fits your historical examples, but you also want a model that is "simple."
 So you set some exchange rate -- the strength of regularization -- and trade off
 "fit my historical data" against "be a simple model." You meet somewhere in the
 middle: a model that's simpler than your unregularized fit would produce, but
-not *so* simple to the point that it's missing obvious/robust patterns in the
+not *so* simple to the point that it's missing obvious/reliable patterns in the
 training data.
 
 In the biz, we call it a penalty on complexity, which is different than calling
@@ -29,24 +29,24 @@ to make it disappear.  With regularization, we'll reach some compromise point,
 and get a model that (a) is less well-fit to the training data than in the
 unregularized state, but also (b) not maximally, uselessly "simple."
 
-This blog post is about how one of the world's two most famous regularized
-regression schemes, the Lasso
-([Tibshirani 1996](https://www.jstor.org/stable/2346178)), rejects compromise.
-At and beyond a certain penalty rate, it will quite happily *only* give you a
-maximally-simple model. No compromise, just an empty model; "I found no pattern
-in the data."  And people love this about the Lasso!
+This blog post is about how the world's most regularized regression schemes,
+the Lasso ([Tibshirani 1996](https://www.jstor.org/stable/2346178)), rejects
+compromise. For certain, sufficiently-high penalty rates, it will quite happily
+*only* give you a maximally-simple model. No compromise, just an empty model;
+"I found no pattern in the data."  And people love this about the Lasso!
 [My dissertation](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2012/EECS-2012-252.html)
 was built on this property, where Lasso regularization can zero out model
 weights.
 
 But it's also weird to me that it's possible, given what I thought we were doing
 by regularizing a model fit.  It's not a compromise anymore.
-Why's Lasso do that?
+
+Why's Lasso do that? 
 
 ## What's Lasso?  (A convex optimization.)
 
-We'll formalize "fit the data, but also use a simple model" by posing an
-optimization task built on five raw ingredients:
+It's typical for statisticians to formalize "fit the data, but with a simple
+model" by posing an optimization task built on five raw ingredients:
 
 1.  Defining "the data" as a collection of $N$ vector-scalar pairs,
     $\left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N$, where each
@@ -55,7 +55,8 @@ optimization task built on five raw ingredients:
 2.  Defining the model as a vector of $p$ parameters,
     $\vec{\mathbb{w}} \in \mathbb{R}^p$.  Call each individual parameter, each
     element of this vector $w_i,~i = 1, \ldots, p$, a *model weight.*
-3.  Defining a function, $f\left(\cdot; \left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N\right): \mathbb{R}^p \to \mathbb{R}$,
+3.  Defining a function,
+    $f\left(~\cdot~; \left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N\right): \mathbb{R}^p \to \mathbb{R}$,
     that expresses goodness-of-fit.  By construction of $f$, a model parameter
     vector that minimizes $f$ corresponds to a model that's "fitting the data"
     to the best possible extent.  Call $f$ the *loss function*.
@@ -98,14 +99,14 @@ $$r\left(\vec{\mathbb{w}}\right) = \left|\left|\vec{\mathbb{w}}\right|\right|_1 
 
 the $L_1$ norm of our model weight vector.  Models with weights that are
 reliably close to zero count as "simpler" than ones with larger-magnitude 
-weights.  Just like $f$, $r$ is always non-negative, and we can minimize it by
-choosing a weight vector of all zeroes.  The model that always picks "zero" as
+weights.  Just like $f$, $r$ is always non-negative.  We can minimize it by
+choosing a weight vector of *all zeroes.*  The model that always picks "zero" as
 its guess for $y$, totally ignoring the feature vector, is this regularizer's
 simplest possible model.
 
 ### Lasso's convexity
 
-From above, our optimization task is:
+Altogether, the optimization task is:
 
 $$\vec{\mathbb{w}}^* := \arg \min_{\vec{\mathbb{w}} \in \mathbb{R}^p} f\left(\vec{\mathbb{w}}; \left\{\vec{\mathbb{x}}_j, y_j\right\}\right) + \lambda r(\vec{\mathbb{w}})$$
 
@@ -136,7 +137,7 @@ make charts.  Charts!
 
 Here's a dataset with a clear relationship between $x$ and $y$.  The data are
 plotted as blue dots.  I fit three Lasso models to this dataset, with $\lambda$
-taking on values of 0, 200, or 600.  I overlay the dashed trendlines each model
+taking on values of 0, 350, or 800.  I overlay the dashed trendlines each model
 produces for the range of $x$'s, and we see those three trendlines decay from
 a slope of 1 to a totally null (maximally simple!) slope of zero:
 
@@ -144,44 +145,44 @@ a slope of 1 to a totally null (maximally simple!) slope of zero:
 3.  Their y values largely track the x values, up to an additive factor of
 +/- 0.5 or so.  Three dashed lines pass through the origin, colored blue,
 purple, and red.  They correspond to model predictions from an unregularized
-(slope of 0.99), moderately regularized (slope 0.588), and heavily regularized
-(slope 0) Lasso fit.](/images/0004_scatterplot.png)
+(slope of 1.037), moderately regularized (slope 0.461), and heavily regularized
+(slope 0) Lasso fit.](/images/0004_a_scatterplot.png)
 
 If we repeatedly produce a model weight $w^*(\lambda)$ for many values of
 $\lambda$, we can see this decay evolve in more detail (with our three models
 above appearing as special large dots):
 
 ![The regularization path that results from sweeping lambda from 0 to 800 or so.
-The y-axis is labelled w*(lambda), ranging from 0 to 1.  The graph's title is
-"Regularization Path".  A single red series starts as a straight red line from 
-the point (0, 0.99) to (500, 0), connecting to another straight red line from
-(500, 0) to (800, 0).  Three dots appear, a blue one at (0, 0.99), purple at
-(200, 0.588), and red at (600, 0).](/images/0004_regularization_path.png)
+The y-axis is labelled w*(lambda), ranging from 0 to just over 1.  The graph's
+title is "Regularization Path".  A single red series starts as a straight red
+line from  the point (0, 1.037) to (620, 0), connecting to another straight red
+line from (620, 0) to (950, 0).  Three dots appear, a blue one at (0, 1.037),
+purple at (350, 0.461), and red at (800, 0).](/images/0004_b_regularization_path.png)
 
 As regularization strength increases, the resulting model weight drops linearly,
 until it hits absolute zero.  Early on, you see compromise between $f$ and $r$:
 $f$ wants a slope of 1, and $r$ wants a slope of 0, and as we strengthen $r$'s
 negotiating leverage, we get models that look more and more like what $r$ wants.
 
-But past $\lambda = 500$ or so, the optimization is ignoring the $f$ completely.
+But past $\lambda = 620$ or so, the optimization is ignoring the $f$ completely.
 That fit-the-data component is still there as part of the objective to be
 minimized, and yet there's no compromise: the model weight returns what $r$
 wants, and only what $r$ wants.  It's *like* $f$ isn't even there, except it
-*is.*
+*is.*  We never zero'ed $f$, we just amp'ed up $r$.
 
 What's Lasso doing?  Why's Lasso do that?
 
 
 ## What's Lasso doing?  (Parabolas.)
 
-Lasso is making our optimizer follow the instructions of one of two parabolas.
+Lasso is making our optimizer follow the instructions of a pair of parabolas.
 When we strengthen regularization past a certain point, we're not able to make
 either parabola happy, and bounce back and forth between them until we're stuck
 at $w^* = 0$.
 
 ### Zero regularization
 
-When there's no regularization at all, when $\lambda = 0$, our optimizer's
+When there's no regularization at all, at $\lambda = 0$, our optimizer's
 objective is just to minimize the loss function $f$, the sum of squared errors:
 
 $$\begin{align}w^*(0) &= \arg \min_{w \in \mathbb{R}^p} f\left(w; \left\{x_j, y_j\right\}\right)\\
@@ -216,15 +217,17 @@ $$w^*(0) = \frac{\sum_{j=1}^N (x_j y_j)}{\sum_{j=1}^N x_j^2}$$
 Let's plot it for the same blue-dots dataset we used above:
 
 ![A blue convex parabola, crossing the y axis at around 340, hitting its minimum
-at the point (1.03, 13.9), with its axis of symmetry added as a vertical blue
-dashed line](/images/0004_parabola_zero_reg.png)
+at the point (1.038, 13.9), with its axis of symmetry added as a vertical blue
+dashed line](/images/0004_c_parabola_zero_reg.png)
 
 Imagine our optimizer as a little guy, wandering back and forth along the range
-of $w$ to minimize $f$.  This parabola gives our optimizer unambiguous
-instructions:
+of $w$ to minimize $f$.  This parabola gives our little optimizer guy
+unambiguous instructions:
 
 > Wherever you are right now, move towards $(D_{xy}/S_x)$.  As long as each step
 > puts you lower than you were before, you will find the minimum.
+
+If the little optimizer guy loops that enough, he'll land at $w^*(0)$.
 
 ### Some regularization
 
@@ -233,32 +236,29 @@ our loss function parabola.  That scaled regularizer is a function that looks
 like:
 
 $$\begin{align}\lambda r(w) &= \lambda\left|w\right| \\
-  &= \left\{
-        \begin{array}{rl} -\lambda w;&w < 0~~\mbox{(LHS)} \\
-          \lambda w;&w \geq 0~~\mbox{(RHS)}
-        \end{array}
-    \right.\end{align}$$
+  &= \begin{cases}
+        -\lambda w &w < 0~~\mbox{(LHS)} \\
+        \lambda w &w \geq 0~~\mbox{(RHS)}
+        \end{cases}
+\end{align}$$
 
-It's piecewise linear function, with a negative slope on the left-hand side
+It's a piecewise linear function, with a negative slope on the left-hand side
 (LHS) and positive slope on the right-hand side (RHS).  When we add $f$ to this,
 we wind up with a piecewise quadratic function:
 
 $$\begin{align}f(w) + \lambda r(w) &= f(w) + \lambda\left|w\right| \\
-    &= \left\{
-        \begin{array}{rl} f(w) -\lambda w;&w < 0~~\mbox{(LHS)} \\
-          f(w) + \lambda w;&w \geq 0~~\mbox{(RHS)}
-        \end{array}
-    \right. \\
-    &= \left\{
-        \begin{array}{rl} S_xw^2 - 2D_{xy}w + S_y -\lambda w;&w < 0~~\mbox{(LHS)} \\
-          S_xw^2 - 2D_{xy}w + S_y + \lambda w;&w \geq 0~~\mbox{(RHS)}
-        \end{array}
-    \right. \\
-    &= \left\{
-        \begin{array}{rl} S_xw^2 - (2D_{xy} + \lambda)w + S_y;&w < 0~~\mbox{(LHS)} \\
-          S_xw^2 - (2D_{xy} - \lambda) w + S_y;&w \geq 0~~\mbox{(RHS)}
-        \end{array}
-    \right.
+    &= \begin{cases}
+          f(w) -\lambda w &w < 0~~\mbox{(LHS)} \\
+          f(w) + \lambda w &w \geq 0~~\mbox{(RHS)}
+    \end{cases} \\
+    &= \begin{cases}
+          S_xw^2 - 2D_{xy}w + S_y -\lambda w&w < 0~~\mbox{(LHS)} \\
+          S_xw^2 - 2D_{xy}w + S_y + \lambda w&w \geq 0~~\mbox{(RHS)}
+    \end{cases} \\
+    &= \begin{cases}
+          S_xw^2 - (2D_{xy} + \lambda)w + S_y &w < 0~~\mbox{(LHS)} \\
+          S_xw^2 - (2D_{xy} - \lambda) w + S_y &w \geq 0~~\mbox{(RHS)}
+    \end{cases}
 \end{align}$$
 
 These two parabolas, LHS and RHS, have "$-b/2a$" vertices aligned at:
@@ -285,7 +285,7 @@ looks like:
 absolute value function that passes through (1, 350).  Both these are mostly
 transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
 bottom of the figure.  Their sum, a thicker, opaque purple series, looks an
-awful lot like a parabola.](/images/0004_parabola_some_reg.png)
+awful lot like a parabola.](/images/0004_d_parabola_some_reg.png)
 
 Imagine the little guy starts at $w = -1$.  His thought process is:
 
@@ -302,13 +302,14 @@ Imagine the little guy starts at $w = -1$.  His thought process is:
     finished following them.
     [Job's done.](https://www.youtube.com/watch?v=5r06heQ5HsI)"
 
-The jump from $w^*(0)$ to $w^*(350)$ is *shrinkage*: the vertex of the RHS
-parabola is $-\lambda/(2S_x)$ units smaller than the zero-regularization vertex:
+The difference between $w^*(0)$ to $w^*(350)$ is *shrinkage*: the vertex of the
+RHS parabola is $-\lambda/(2S_x)$ units smaller than the zero-regularization
+vertex:
 
 ![Same as previous image, but with the vertices of the blue and purple
 parabolas drawn with large blue/purple dots.  Two vertical dashed guidelines
 mark the axes of symmetry for the parabolas, and a left-pointing arrow going
-from the blue axis to the purple axis is labeled "-λ/(2Sx)"](/images/0004_parabola_some_reg_vertices.png)
+from the blue axis to the purple axis is labeled "-λ/(2Sx)"](/images/0004_e_parabola_some_reg_vertices.png)
 
 Neither $f$ nor $r$ are minimized at that purple vertex axis of symmetry.  Both
 could be much smaller, if they didn't have to accommodate the other.  That's
@@ -321,7 +322,7 @@ absolute value function that passes through (0.5, 350).  Both these are mostly
 transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
 bottom of the figure.  Their sum, a thicker, opaque red series, no longer looks
 like a parabola, it now looks like a Greek nu character with it point at
-(0, 320).](/images/0004_parabola_lots_reg.png)
+(0, 320).](/images/0004_f_parabola_lots_reg.png)
 
 ## Why's Lasso do that? (Discontinuous slope.)
 

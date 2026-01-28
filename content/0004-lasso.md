@@ -370,6 +370,14 @@ expect, around 625.
 
 ## Why's Lasso do that? (Discontinuous slope.)
 
-![TODO alt text](/images/0004_g_slopes.png)
+![A line plot titled "Slopes of lasso objectives" with an x-axis labelled "w"
+and three series:
+(1) in blue, a straight line with slope of 650 and intercept of -650 or so, with
+a big blue dot marking its x intercept around 1.0;
+(2) in purple, a piecewise linear function where both pieces have slope 650, but
+a breakage at w=0, with intercepts of -1000 and 250 on either side, with a big
+purple dot marking its x intercept around 0.49;
+(3) in red, a piecewise linear function where both pieces have slope 650, but
+a breakage at w=0, with intercepts of -1450 and 150](/images/0004_g_slopes.png)
 
 ## Returning to multiple features

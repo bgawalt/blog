@@ -1,5 +1,5 @@
 Title: Why's Lasso Do That?
-Date: 2026-01-13 11:30
+Date: 2026-01-27 11:30
 Slug: 0004-lasso
 Category: stats
 Tags: stats, ml, lasso
@@ -341,18 +341,17 @@ For some optimizers, this bouncing back and forth can take awhile to resolve.
 But when it does resolve, it can only end at $w^*(800) = 0$, the maximally
 simple model weight.
 
-Both the LHS and RHS parabolae have vertices centered on the opposite side.
-Our blue-dot case had $D_{xy} > 0$, but this same
-both-parabolae-say-try-the-otherphenomenon can occur for the general case:
+When does this happen?  It happens when both the LHS and RHS parabolae have
+vertices centered on the opposite side.
 
 If $D_{xy} > 0$, the unregularized vertex is on the RHS.  Ramping $\lambda$
-such that the RHS vertex $\left(\frac{2D_{xy} - \lambda}{2S_x}\right)$ is
+such that the RHS vertex $\left(2D_{xy} - \lambda\right)/(2S_x)$ is
 pushed to the LHS means:
 
 $$2D_{xy} - \lambda < 0 \Rightarrow \lambda > 2D_{xy}$$
 
 If $D_{xy} < 0$, the unregularized vertex is on the LHS.  Ramping $\lambda$
-such that $\left(\frac{2D_{xy} + \lambda}{2S_x}\right)$ falls on the RHS means:
+such that $\left(2D_{xy} + \lambda\right)/(2S_x)$ falls on the RHS means:
 
 $$2D_{xy} + \lambda > 0 \Rightarrow \lambda > -2D_{xy}$$
 

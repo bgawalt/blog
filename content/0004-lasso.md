@@ -317,12 +317,57 @@ a good compromise: one that leaves everyone upset.
 
 ### Lots of regularization
 
+When we ramp up our value of $\lambda$ from 350 to 800 on our blue-dots example,
+nothing about the rules change for our little-guy optimizer.  What does change
+is the layout of the two parabolae, such that neither parabola's vertex lies
+on the side its rule governs:
+
 ![Our blue parabola from "zero regularization" joined by a steeper red scaled 
 absolute value function that passes through (0.5, 350).  Both these are mostly
 transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
 bottom of the figure.  Their sum, a thicker, opaque red series, no longer looks
 like a parabola, it now looks like a Greek nu character with it point at
 (0, 320).](/images/0004_f_parabola_lots_reg.png)
+
+The thought process for our little guy is:
+
+1.  "When I'm on the LHS, it wants me to go to
+    $\left(2D_{xy} + \lambda\right)/(2S_x)$, which is on the RHS."
+2.  "But then when I get to the RHS, *it* wants me to go look for a minimum at
+     $\left(2D_{xy} - \lambda\right)/(2S_x)$, which is back on the LHS.
+     I just came from there!!"
+
+For some optimizers, this bouncing back and forth can take awhile to resolve.
+But when it does resolve, it can only end at $w^*(800) = 0$, the maximally
+simple model weight.
+
+Both the LHS and RHS parabolae have vertices centered on the opposite side.
+Our blue-dot case had $D_{xy} > 0$, but this same
+both-parabolae-say-try-the-otherphenomenon can occur for the general case:
+
+If $D_{xy} > 0$, the unregularized vertex is on the RHS.  Ramping $\lambda$
+such that the RHS vertex $\left(\frac{2D_{xy} - \lambda}{2S_x}\right)$ is
+pushed to the LHS means:
+
+$$2D_{xy} - \lambda < 0 \Rightarrow \lambda > 2D_{xy}$$
+
+If $D_{xy} < 0$, the unregularized vertex is on the LHS.  Ramping $\lambda$
+such that $\left(\frac{2D_{xy} + \lambda}{2S_x}\right)$ falls on the RHS means:
+
+$$2D_{xy} + \lambda > 0 \Rightarrow \lambda > -2D_{xy}$$
+
+We can cover both these bases by saying, "compromise is ruled out and the
+maximally-simple model dominates when:"
+
+$$\lambda > 2|D_{xy}|$$
+
+**This is the magic criteria for Lasso.**  Past this level of regularization,
+there's no more consulting the data, there's only the empty model waiting at the
+end of the optimization.
+
+Checking my work: in the blue-dot case, $D_{xy} = 314.7$, and the
+"Regularization Path" figure shows that $w^*(\lambda)$ hits zero right where we
+expect, around 625.
 
 ## Why's Lasso do that? (Discontinuous slope.)
 

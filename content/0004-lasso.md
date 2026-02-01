@@ -457,23 +457,24 @@ dimensions, too.
 Bringing back our original $N$ vector-scalar pairs,
 $\left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N$, I'm going to define some
 new helper aliases.  First, imagine stacking all the feature vectors,
-transposed horizontally, into a matrix $X \in \mathbb{R}^{N \times p}$:
+transposed horizontally, into a matrix
+$\mathbf{X} \in \mathbb{R}^{N \times p}$:
 
-$$X = \left[\begin{array}{c} ~~- \vec{\mathbb{x}}_1^T -~~ \\
-\cdots \\
+$$\mathbf{X} = \left[\begin{array}{c} ~~- \vec{\mathbb{x}}_1^T -~~ \\
+\vdots \\
 ~~- \vec{\mathbb{x}}_j^T -~~ \\
-\cdots \\
+\vdots \\
 ~~- \vec{\mathbb{x}}_N^T -~~ \\
 \end{array}\right]$$
 
 Now imagine pulling out the $i$th column from that matrix: it encodes the
 $i$th predictive feature for each datum $j = 1, \ldots, N$.  Call each of these
-column vectors $\vec{\mathbb{x}}^{(i)}$, $i = 1, \ldots, p$:
+column vectors $\vec{\mathbb{x}}^{(i)} \in \mathbb{R}^N$, $i = 1, \ldots, p$:
 
-$$X = \left[\begin{array}{c} ~~- \vec{\mathbb{x}}_1^T -~~ \\
-\cdots \\
+$$\mathbf{X} = \left[\begin{array}{c} ~~- \vec{\mathbb{x}}_1^T -~~ \\
+\vdots \\
 ~~- \vec{\mathbb{x}}_j^T -~~ \\
-\cdots \\
+\vdots \\
 ~~- \vec{\mathbb{x}}_N^T -~~ \\
 \end{array}\right] = \left[\begin{array}{ccccc}
 \vert & & \vert & & \vert \\
@@ -481,11 +482,42 @@ $$X = \left[\begin{array}{c} ~~- \vec{\mathbb{x}}_1^T -~~ \\
 \vert & & \vert & & \vert \\
 \end{array}\right]$$
 
+And let's also pull the labels $y_j$ into their own column vector:
+
+$$\vec{\mathbb{y}} = \left[\begin{array}{c} y_1 \\
+\vdots \\
+y_N
+\end{array}\right] \in \mathbb{R}^N$$
+
 ### Full sparsity
 
 Imagine, for our multivariate dataset, we have currently set our little-guy
 optimizer at the fully sparse, all-zeros weight vector,
 $\vec{\mathbb{w}} = \vec{\mathbb{0}}$.  What would it take to convince the
 little guy to move any single model weight off of zero?
+
+The little guy can consider each feature, $\vec{\mathbb{x}}^{(i)}$, one at a
+time, as if each were its own individual univariate Lasso case.
+
+For feature $i$, the magic threshold is the analogue of $2|D_{xy}|$, taking a
+dot product between the $i$th feature column vector and the label column vector:
+
+$$\lambda > 2\left|\vec{\mathbb{y}}^T\vec{\mathbb{x}}^{(i)}\right|$$
+
+The little guy will not move off $\vec{\mathbb{w}} = \vec{\mathbb{0}}$ if
+$\lambda$ is big enough to cross the magic threshold for all $p$ features.
+Which means have a *meta*-magic threshold in the multivariate case that zeros
+out all $p$ model weights, just by ramping $\lambda$ to a big enough value:
+
+$$\lambda > \max_{i = 1, \ldots, p}\left|\vec{\mathbb{y}}^T\vec{\mathbb{x}}^{(i)}\right|
+\Rightarrow \vec{\mathbb{w}}^*(0) = \vec{\mathbb{0}}$$
+
+(Note that the $\max_i$ operation is the same as, for our definition of matrix
+$\mathbf{X}$ above: "calculate the vector
+$\mathbf{X}^T\vec{\mathbb{y}}$, then find the largest-magnitude element.")
+
+This is also good to know!  If we're using crossvalidation to hunt for the
+perfect $\lambda$ parameter, it continues to be nice to have an upper bound on
+the search space.
 
 ### Partial sparsity

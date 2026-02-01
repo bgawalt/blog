@@ -8,7 +8,8 @@ Summary: How the Lasso forces a zero-weight model: an end-to-end rundown.
 opengraph_image: 0004_lasso_twirl.png
 
 
-![MS Paint doodle of a purple lambda (the Greek alphabet character) twirling alasso in the desert](/images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
+![MS Paint doodle of a purple lambda (the Greek alphabet character) twirling a
+lasso in the desert](/images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
 
 > **Note:** this post makes heavy use of MathJax. If you're reading via RSS,
 > you'll want to click through to the web version.
@@ -497,7 +498,11 @@ $\vec{\mathbb{w}} = \vec{\mathbb{0}}$.  What would it take to convince the
 little guy to move any single model weight off of zero?
 
 The little guy can consider each feature, $\vec{\mathbb{x}}^{(i)}$, one at a
-time, as if each were its own individual univariate Lasso case.
+time, as if each were its own individual univariate Lasso case.  The current
+weight vector ignores *every* feature, so the question of "should we put any
+weight on feature $i$?" depends only on the univariate dataset
+$\left\{\vec{\mathbb{x}}^{(i)}_j, y_j\right\}_{j=1}^N$; the other features are
+currently zeroed out and of no concern.
 
 For feature $i$, the magic threshold is the analogue of $2|D_{xy}|$, taking a
 dot product between the $i$th feature column vector and the label column vector:
@@ -510,7 +515,7 @@ Which means have a *meta*-magic threshold in the multivariate case that zeros
 out all $p$ model weights, just by ramping $\lambda$ to a big enough value:
 
 $$\lambda > \max_{i = 1, \ldots, p}\left|\vec{\mathbb{y}}^T\vec{\mathbb{x}}^{(i)}\right|
-\Rightarrow \vec{\mathbb{w}}^*(0) = \vec{\mathbb{0}}$$
+\Rightarrow \vec{\mathbb{w}}^*(\lambda) = \vec{\mathbb{0}}$$
 
 (Note that the $\max_i$ operation is the same as, for our definition of matrix
 $\mathbf{X}$ above: "calculate the vector
@@ -521,3 +526,20 @@ perfect $\lambda$ parameter, it continues to be nice to have an upper bound on
 the search space.
 
 ### Partial sparsity
+
+Unregularized multivariate ordinary least squares will, in almost all cases,
+give you a $w^*(0)$ with weight on every feature.  And if we ramp $\lambda$
+past the meta-magic threshold, we can get a fully sparse, all-zeros set of
+model weights, $\vec{\mathbb{w}}^*(\lambda_{\text{lots}}) = \vec{\mathbb{0}}$.
+So it stands to reason that somewhere in along the ramp between "no sparsity"
+and "full sparisty" you get values of $\lambda$ that mean "some sparsity."
+
+For example, if you set $\lambda$ *juuuust* below the meta-magic threshold,
+then whatever feature triggered the max,
+$i = \arg \max_{i' = 1, \ldots, p}\left|\vec{\mathbb{y}}^T\vec{\mathbb{x}}^{(i')}\right|$,
+will be non-zero, but none of the other weights will have turned on yet.
+
+It's hard to say what happens after that.  The dynamics depend on the covariance
+statistics you see between your features across the $N$ data points.  But we
+can at least talk about what it means for our little guy to settle in on a
+partially sparse solution.

@@ -1,5 +1,5 @@
 Title: Why's Lasso Do That?
-Date: 2026-01-27 11:30
+Date: 2026-02-02 11:30
 Slug: 0004-lasso
 Category: stats
 Tags: stats, ml, lasso
@@ -32,8 +32,10 @@ unregularized state, but also (b) not maximally, uselessly "simple."
 This blog post is about how the world's most regularized regression schemes,
 the Lasso ([Tibshirani 1996](https://www.jstor.org/stable/2346178)), rejects
 compromise. For certain, sufficiently-high penalty rates, it will quite happily
-*only* give you a maximally-simple model. No compromise, just an empty model;
-"I found no pattern in the data."  And people love this about the Lasso!
+*only* give you a maximally-simple model: one that zeros out consideration of
+any feature on which you tried to base your predictions. No compromise, just an
+all-zeros empty model; "I found no pattern in the data."  And people love this
+about the Lasso!
 [My dissertation](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2012/EECS-2012-252.html)
 was built on this property, where Lasso regularization can zero out model
 weights.
@@ -360,15 +362,43 @@ maximally-simple model dominates when:"
 
 $$\lambda > 2|D_{xy}|$$
 
-**This is the magic criteria for Lasso.**  Past this level of regularization,
-there's no more consulting the data, there's only the empty model waiting at the
-end of the optimization.
+**This is the magic threshold for Lasso.**  Past this level of regularization,
+we can only get the empty model out of the optimization.
 
 Checking my work: in the blue-dot case, $D_{xy} = 314.7$, and the
 "Regularization Path" figure shows that $w^*(\lambda)$ hits zero right where we
-expect, around 625.
+expect, around $2 \times 314.7 \approx 630$.
+
+(It's good to know Lasso has this magic threshold: it means when tuning the
+regularization parameter so that the model that drops out works on held-out
+test data, we can put an upper bound on our search space.  That's useful!)
 
 ## Why's Lasso do that? (Discontinuous slope.)
+
+The slope of our Lasso objective looks like:
+
+$$\begin{align}\frac{d}{dw}\left\{f(w) + \lambda r(w)\right\} &= \frac{d}{dw}f(w) + \lambda\frac{d}{dw}\left|w\right| \\
+&= \frac{d}{dw}\left\{S_xw^2 - 2D_{xy}w + S_y\right\} + + \lambda\frac{d}{dw}\left|w\right| \\
+&= 2S_xw - 2D_{xy} + \lambda\frac{d}{dw}\left|w\right| \end{align}$$
+
+The derivative for our regularizer hits a snag at $w = 0$; the slope tangent
+to $|w|$ depends on whether you mean "sloping in from the LHS" or "sloping in
+from the RHS":
+
+$$\lambda\frac{d}{dw}|w| = \begin{cases}
+          -\lambda&w < 0 \\
+          \mbox{undefined}&w = 0 \\
+          \lambda&w > 0
+    \end{cases}$$
+
+$$\frac{d}{dw}\left\{f(w) + \lambda r(w)\right\} = \begin{cases}
+          2S_xw - 2D_{xy} - \lambda&w < 0 \\
+          \mbox{undefined}&w = 0 \\
+          2S_xw - 2D_{xy} + \lambda&w > 0
+    \end{cases}$$
+
+We can plot this for the zero-, some-, and lots-of-regularization models fit to
+the blue-dot data, where we see a steadily larger discontinutiy at $w = 0$:
 
 ![A line plot titled "Slopes of lasso objectives" with an x-axis labelled "w"
 and three series:
@@ -380,4 +410,50 @@ purple dot marking its x intercept around 0.49;
 (3) in red, a piecewise linear function where both pieces have slope 650, but
 a breakage at w=0, with intercepts of -1450 and 150](/images/0004_g_slopes.png)
 
+For zero- and some-regularization, the blue and purple lines, we see
+intersection with the horizontal axis at the same points we see the vertices of
+their respective parabolae above: $w$ values where our Lasso objective has
+zero slope.
+
+But with lots-of-regularization, there's no similar intersection.  The
+discontinuity introduced by $\lambda r(w)$ is large enough
+that, at $w = 0$, the slope jumps straight from "very negative" to "slightly
+positive." This pseudo-intersection with the horizontal axis determines where
+our little-guy optimizer halts, just like the genuine points of zero slope in
+the blue and purple models.
+
+Looking at the slope discontinuity explains Lasso's magic threshold 
+$\lambda > 2|D_{xy}|$ in a way that generalizes to other loss functions for $f$.
+The regularizer is acting like a kind of crowbar, chiseled into the
+unregularized objective at the point $(w, f'(w))$, and prying the LHS and RHS
+apart from each other by an additive factor of $\lambda$.
+
+Our blue slope line has a non-zero value at $w = 0$.  For $\lambda|w|$ to
+introduce a sign change in the slope, it either needs to push a positive $f'(0)$
+below the horizontal axis, or (as in the blue-dots example here) push a negative
+$f'(0)$ above the horizontal axis.  As in, we get the maximally-simple model
+whenever we set:
+
+$$\lambda \geq \left|f'(0)\right|$$
+
+For original-recipe Lasso , where our loss $f$ is the ordinary least squares
+function, $f'(0) = 2D_{xy}$.  Plug that in above and recover the magic
+threshold. Without any regularization (for $D_{xy} > 0$ here, but the logic
+holds in the mirror case, too), $f(w)$ decreases as you move from $w = 0$ into
+the RHS.  Even with *some* regularization, $f(w) + \lambda r(w)$ decreases as
+you move into the RHS -- it has a negative slope at $w = 0^+$.
+
+When $\lambda$ is big enough, the discontinuity of slope it introduces can
+entirely swamp the initial slope $f(w)$ has, whether it points towards the LHS
+or the RHS. That's why Lasso does that.
+
+
 ## Returning to multiple features
+
+This same phenomenon applies even when we reinflate from $p = 1$ univariate
+feature, back to the $p > 1$ multivariate case.  Lasso does this in high
+dimensions, too.
+
+### Full sparsity
+
+### Partial sparsity

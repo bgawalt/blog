@@ -454,6 +454,38 @@ This same phenomenon applies even when we reinflate from $p = 1$ univariate
 feature, back to the $p > 1$ multivariate case.  Lasso does this in high
 dimensions, too.
 
+Bringing back our original $N$ vector-scalar pairs,
+$\left\{\vec{\mathbb{x}}_j, y_j\right\}_{j = 1}^N$, I'm going to define some
+new helper aliases.  First, imagine stacking all the feature vectors,
+transposed horizontally, into a matrix $X \in \mathbb{R}^{N \times p}$:
+
+$$X = \left[\begin{array}{c} ~~- \vec{\mathbb{x}}_1^T -~~ \\
+\cdots \\
+~~- \vec{\mathbb{x}}_j^T -~~ \\
+\cdots \\
+~~- \vec{\mathbb{x}}_N^T -~~ \\
+\end{array}\right]$$
+
+Now imagine pulling out the $i$th column from that matrix: it encodes the
+$i$th predictive feature for each datum $j = 1, \ldots, N$.  Call each of these
+column vectors $\vec{\mathbb{x}}^{(i)}$, $i = 1, \ldots, p$:
+
+$$X = \left[\begin{array}{c} ~~- \vec{\mathbb{x}}_1^T -~~ \\
+\cdots \\
+~~- \vec{\mathbb{x}}_j^T -~~ \\
+\cdots \\
+~~- \vec{\mathbb{x}}_N^T -~~ \\
+\end{array}\right] = \left[\begin{array}{ccccc}
+\vert & & \vert & & \vert \\
+\vec{\mathbb{x}}^{(1)} & \cdots & \vec{\mathbb{x}}^{(i)} & \cdots & \vec{\mathbb{x}}^{(p)} \\
+\vert & & \vert & & \vert \\
+\end{array}\right]$$
+
 ### Full sparsity
+
+Imagine, for our multivariate dataset, we have currently set our little-guy
+optimizer at the fully sparse, all-zeros weight vector,
+$\vec{\mathbb{w}} = \vec{\mathbb{0}}$.  What would it take to convince the
+little guy to move any single model weight off of zero?
 
 ### Partial sparsity

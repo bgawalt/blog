@@ -7,7 +7,7 @@ Author: Brian Gawalt
 Summary: Humanoid robots would be a great platform business, if they worked.
 opengraph_image: 0003_bender_money.png
 
-![MS Paint doodle of Bender from Futurama holding fistfuls of 100 dollar bills in front of the line go up emoji](/images/0003_bender_money.png){: style="width:80%; max-width:400px;"}
+![MS Paint doodle of Bender from Futurama holding fistfuls of 100 dollar bills in front of the line go up emoji]({attach}images/0003_bender_money.png){: style="width:80%; max-width:400px;"}
 
 Here's an opportunity to talk about the tech industry narrowly (there's hype
 about humanoid robots) and broadly (there's eternal investor demand for
@@ -88,7 +88,7 @@ Matthew Ball published the longform explainer for platform investing in May
 The specific platform everyone's chasing is that big one up front, iOS
 (chart from Ball):
 
-![Bar chart of Apple annual operating cash flow](/images/0003_apple_cash_flow.png){: style="width:90%"}
+![Bar chart of Apple annual operating cash flow]({attach}images/0003_apple_cash_flow.png){: style="width:90%"}
 
 Ball details how much money companies pour into would-be platforms, with Google
 Cloud (my most recent employer) as one example (emphasis Ball's):
@@ -108,7 +108,7 @@ Cloud (my most recent employer) as one example (emphasis Ball's):
 > cumulative breakeven until the 2030s (it won’t be IRR positive until years
 > later,). That’s a literal quarter century and not guaranteed, either. 
 
-![Bar charts of Apple annual operating cash flow](/images/0003_google_cloud.png){: style="width:90%"}
+![Bar charts of Apple annual operating cash flow]({attach}images/0003_google_cloud.png){: style="width:90%"}
 
 One reason to hype humanoid robots, bipedalism and all, is to appeal to this
 platform play and imply these platform profits, so long as investors recognize

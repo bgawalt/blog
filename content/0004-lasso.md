@@ -9,7 +9,7 @@ opengraph_image: 0004_lasso_twirl.png
 
 
 ![MS Paint doodle of a purple lambda (the Greek alphabet character) twirling a
-lasso in the desert](/images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
+lasso in the desert]({attach}images/0004_lasso_twirl.png){: style="width:80%; max-width:500px;"}
 
 > **Note:** this post makes heavy use of MathJax. If you're reading via RSS,
 > you'll want to click through to the web version.
@@ -150,7 +150,7 @@ a slope of 1 to a totally null (maximally simple!) slope of zero:
 +/- 0.5 or so.  Three dashed lines pass through the origin, colored blue,
 purple, and red.  They correspond to model predictions from an unregularized
 (slope of 1.037), moderately regularized (slope 0.461), and heavily regularized
-(slope 0) Lasso fit.](/images/0004_a_scatterplot.png)
+(slope 0) Lasso fit.]({attach}images/0004_a_scatterplot.png)
 
 *  The model with least regularization, $\lambda = 0$ in blue, has a trendline
    that best fits the data.
@@ -170,7 +170,7 @@ The y-axis is labelled w*(lambda), ranging from 0 to just over 1.  The graph's
 title is "Regularization Path".  A single red series starts as a straight red
 line from  the point (0, 1.037) to (630, 0), connecting to another straight red
 line from (630, 0) to (950, 0).  Three dots appear, a blue one at (0, 1.037),
-purple at (350, 0.461), and red at (800, 0).](/images/0004_b_regularization_path.png)
+purple at (350, 0.461), and red at (800, 0).]({attach}images/0004_b_regularization_path.png)
 
 As regularization strength increases, the resulting model weight drops linearly,
 until it hits absolute zero.  Early on, you see compromise between $f$ and $r$:
@@ -235,7 +235,7 @@ we used above:
 
 ![A blue convex parabola, crossing the y axis at around 340, hitting its minimum
 at the point (1.038, 13.9), with its axis of symmetry added as a vertical blue
-dashed line](/images/0004_c_parabola_zero_reg.png)
+dashed line]({attach}images/0004_c_parabola_zero_reg.png)
 
 We use an optimization routine that implements some kind of descent method to
 start with any arbitrary guess at the $w$ that minimizes $f$, then refines it
@@ -305,7 +305,7 @@ looks like, where the purple series is the sum of the blue and the red:
 absolute value function that passes through (1, 350).  Both these are mostly
 transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
 bottom of the figure.  Their sum, a thicker, opaque purple series, looks an
-awful lot like a parabola.](/images/0004_d_parabola_some_reg.png)
+awful lot like a parabola.]({attach}images/0004_d_parabola_some_reg.png)
 
 Imagine the little guy starts at $w = -1$.  His thought process is:
 
@@ -329,7 +329,7 @@ vertex:
 ![Same as previous image, but with the vertices of the blue and purple
 parabolas drawn with large blue/purple dots.  Two vertical dashed guidelines
 mark the axes of symmetry for the parabolas, and a left-pointing arrow going
-from the blue axis to the purple axis is labeled "-λ/(2Sx)"](/images/0004_e_parabola_some_reg_vertices.png)
+from the blue axis to the purple axis is labeled "-λ/(2Sx)"]({attach}images/0004_e_parabola_some_reg_vertices.png)
 
 Neither $f$ nor $r$ are minimized at that points where they intersect the purple
 vertex axis of symmetry.  Both could be much smaller, if they didn't have to
@@ -348,7 +348,7 @@ absolute value function that passes through (0.5, 350).  Both these are mostly
 transparent, they are called "f(w)" and "lambda r(w)" in the legend at the 
 bottom of the figure.  Their sum, a thicker, opaque red series, no longer looks
 like a parabola, it now looks like a Greek nu character with it point at
-(0, 320).](/images/0004_f_parabola_lots_reg.png)
+(0, 320).]({attach}images/0004_f_parabola_lots_reg.png)
 
 The thought process for our little guy is:
 
@@ -432,7 +432,7 @@ a big blue dot marking its x intercept around 1.0;
 a breakage at w=0, with intercepts of -1000 and 250 on either side, with a big
 purple dot marking its x intercept around 0.49;
 (3) in red, a piecewise linear function where both pieces have slope 650, but
-a breakage at w=0, with intercepts of -1450 and 150](/images/0004_g_slopes.png)
+a breakage at w=0, with intercepts of -1450 and 150]({attach}images/0004_g_slopes.png)
 
 (Side note: in an alternate case where $D_{xy}$ is negative, this plot of
 slopes will look very similar.  Lasso is still convex, so these slope curves

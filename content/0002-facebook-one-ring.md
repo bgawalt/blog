@@ -11,7 +11,7 @@ There's
 from
 [Matthew Green](https://bsky.app/profile/matthewdgreen.bsky.social):
 
-![Screenshot of tweet from X user @matthew_d_green, display name "Matthew Green is on BlueSky", text of: "I would liken Tor to putting on Sauron's ring. The wearer is invisible to ordinary beings, like Men, but highly visible to the Nazgûl." Posted 5:21 PM, Oct 23, 2014; 922 likes, 828 retweets, as of this blog post](/images/0002_tor_nazghul_tweet.png)
+![Screenshot of tweet from X user @matthew_d_green, display name "Matthew Green is on BlueSky", text of: "I would liken Tor to putting on Sauron's ring. The wearer is invisible to ordinary beings, like Men, but highly visible to the Nazgûl." Posted 5:21 PM, Oct 23, 2014; 922 likes, 828 retweets, as of this blog post]({attach}images/0002_tor_nazghul_tweet.png)
 
 I'm not a Tor expert, or even a Tor user, so I wouldn't trust my interpretation
 here to match Green's intent. But the dramatic stakes are preserved if I go
